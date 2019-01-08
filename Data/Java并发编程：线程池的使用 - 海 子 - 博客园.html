@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)https://www.cnblogs.com/dolphin0520/p/3932921.html -->
+<html lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="origin">
+<title>Java并发编程：线程池的使用 - 海 子 - 博客园</title>
+<meta property="og:description" content="Java并发编程：线程池的使用 在前面的文章中，我们使用线程的时候就去创建一个线程，这样实现起来非常简便，但是就会有一个问题： 如果并发的线程数量很多，并且每个线程都是执行一个时间很短的任务就结束了，">
+<link type="text/css" rel="stylesheet" href="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/bundle-darkgreentrip.css">
+<link type="text/css" rel="stylesheet" href="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/86633.css">
+<link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/bundle-darkgreentrip-mobile.css">
+<link title="RSS" type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/dolphin0520/rss">
+<link title="RSD" type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/dolphin0520/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/dolphin0520/wlwmanifest.xml">
+<script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/f.txt"></script><script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/amp4ads-host-v0.js.download"></script><script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/pubads_impl_rendering_285.js.download"></script><script async="" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/analytics.js.download"></script><script type="text/javascript" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/encoder.js.download"></script><script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/jquery-2.2.0.min.js.download"></script>
+<script type="text/javascript">var currentBlogApp = 'dolphin0520', cb_enable_mathjax=true;var isLogined=false;</script>
+<script type="text/x-mathjax-config;executed=true">
+    MathJax.Hub.Config({
+        tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']], processClass: 'math', processEscapes: true },
+        TeX: { 
+            equationNumbers: { autoNumber: ['AMS'], useLabelIds: true }, extensions: ['extpfeil.js'] 
+        },
+        'HTML-CSS': { linebreaks: { automatic: true } },
+        SVG: { linebreaks: { automatic: true } }
+        });
+    </script><script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/MathJax.js.download"></script>
+<script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/blog-common.js.download" type="text/javascript"></script>
+<link rel="preload" href="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/f(1).txt" as="script"><script type="text/javascript" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/f(1).txt"></script><script src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/pubads_impl_285.js.download" async=""></script><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><link rel="prefetch" href="https://tpc.googlesyndication.com/safeframe/1-0-31/html/container.html"><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+<body><div id="MathJax_Message" style="display: none;"></div>
+<a name="top"></a>
+
+<!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+	<a id="lnkBlogLogo" href="https://www.cnblogs.com/dolphin0520/"><img id="blogLogo" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/logo.gif" alt="返回主页"></a>			
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle" href="https://www.cnblogs.com/dolphin0520/">海 子</a></h1>
+<h2>不经历风雨，怎能见彩虹？做一个快乐的程序员。</h2>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">博客园</a></li>
+<li><a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/dolphin0520/">首页</a></li>
+<li><a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+<li><a id="blog_nav_contact" class="menu" rel="nofollow" href="https://msg.cnblogs.com/send/%E6%B5%B7%20%E5%AD%90">联系</a></li>
+<li><a id="blog_nav_rss" class="menu" href="https://www.cnblogs.com/dolphin0520/rss">订阅</a>
+<!--<a id="blog_nav_rss_image" class="aHeaderXML" href="https://www.cnblogs.com/dolphin0520/rss"><img src="//www.cnblogs.com/images/xml.gif" alt="订阅" /></a>--></li>
+<li><a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a></li>
+</ul>
+		<div class="blogStats">
+			
+			<div id="blog_stats">
+<span id="stats_post_count">随笔 - 185&nbsp; </span>
+<span id="stats_article_count">文章 - 0&nbsp; </span>
+<span id="stats-comment_count">评论 - 1763</span>
+</div>
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+<div id="post_detail">
+<!--done-->
+<div id="topics">
+	<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/dolphin0520/p/3932921.html">Java并发编程：线程池的使用</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body" class="blogpost-body"><p style="text-align: center;">Java并发编程：线程池的使用</p>
+<p style="text-align: left;">　　在前面的文章中，我们使用线程的时候就去创建一个线程，这样实现起来非常简便，但是就会有一个问题：</p>
+<p style="text-align: left;">　　如果并发的线程数量很多，并且每个线程都是执行一个时间很短的任务就结束了，这样频繁创建线程就会大大降低系统的效率，因为频繁创建线程和销毁线程需要时间。</p>
+<p style="text-align: left;">　　那么有没有一种办法使得线程可以复用，就是执行完一个任务，并不被销毁，而是可以继续执行其他的任务？</p>
+<p style="text-align: left;">　　在Java中可以通过线程池来达到这样的效果。今天我们就来详细讲解一下Java的线程池，首先我们从最核心的ThreadPoolExecutor类中的方法讲起，然后再讲述它的实现原理，接着给出了它的使用示例，最后讨论了一下如何合理配置线程池的大小。</p>
+<p style="text-align: left;">　　以下是本文的目录大纲：</p>
+<p style="text-align: left;">　　一.Java中的ThreadPoolExecutor类</p>
+<p style="text-align: left;">　　二.深入剖析线程池实现原理</p>
+<p style="text-align: left;">　　三.使用示例</p>
+<p style="text-align: left;">　　四.如何合理配置线程池的大小　</p>
+<p style="text-align: left;">　　若有不正之处请多多谅解，并欢迎批评指正。</p>
+<p style="text-align: left;">　　请尊重作者劳动成果，转载请标明原文链接：</p>
+<p style="text-align: left;">　　http://www.cnblogs.com/dolphin0520/p/3932921.html</p>
+<p style="text-align: left;">　</p>
+<h2 style="text-align: left;">一.Java中的ThreadPoolExecutor类</h2>
+<p style="text-align: left;">　　java.uitl.concurrent.ThreadPoolExecutor类是线程池中最核心的一个类，因此如果要透彻地了解Java中的线程池，必须先了解这个类。下面我们来看一下ThreadPoolExecutor类的具体实现源码。</p>
+<p style="text-align: left;">　　在ThreadPoolExecutor类中提供了四个构造方法：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_600987" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">ThreadPoolExecutor </code><code class="java keyword">extends</code> <code class="java plain">AbstractExecutorService {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">.....</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java keyword">int</code> <code class="java plain">corePoolSize,</code><code class="java keyword">int</code> <code class="java plain">maximumPoolSize,</code><code class="java keyword">long</code> <code class="java plain">keepAliveTime,TimeUnit unit,</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">BlockingQueue&lt;Runnable&gt; workQueue);</code></div><div class="line number5 index4 alt2">&nbsp;</div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java keyword">int</code> <code class="java plain">corePoolSize,</code><code class="java keyword">int</code> <code class="java plain">maximumPoolSize,</code><code class="java keyword">long</code> <code class="java plain">keepAliveTime,TimeUnit unit,</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">BlockingQueue&lt;Runnable&gt; workQueue,ThreadFactory threadFactory);</code></div><div class="line number8 index7 alt1">&nbsp;</div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java keyword">int</code> <code class="java plain">corePoolSize,</code><code class="java keyword">int</code> <code class="java plain">maximumPoolSize,</code><code class="java keyword">long</code> <code class="java plain">keepAliveTime,TimeUnit unit,</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">BlockingQueue&lt;Runnable&gt; workQueue,RejectedExecutionHandler handler);</code></div><div class="line number11 index10 alt2">&nbsp;</div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java keyword">int</code> <code class="java plain">corePoolSize,</code><code class="java keyword">int</code> <code class="java plain">maximumPoolSize,</code><code class="java keyword">long</code> <code class="java plain">keepAliveTime,TimeUnit unit,</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">BlockingQueue&lt;Runnable&gt; workQueue,ThreadFactory threadFactory,RejectedExecutionHandler handler);</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">...</code></div><div class="line number15 index14 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　从上面的代码可以得知，ThreadPoolExecutor继承了AbstractExecutorService类，并提供了四个构造器，事实上，通过观察每个构造器的源码具体实现，发现前面三个构造器都是调用的第四个构造器进行的初始化工作。</p>
+<p>&nbsp;　　下面解释下一下构造器中各个参数的含义：</p>
+<ul>
+<li>corePoolSize：核心池的大小，这个参数跟后面讲述的线程池的实现原理有非常大的关系。在创建了线程池后，默认情况下，线程池中并没有任何线程，而是等待有任务到来才创建线程去执行任务，除非调用了prestartAllCoreThreads()或者prestartCoreThread()方法，从这2个方法的名字就可以看出，是预创建线程的意思，即在没有任务到来之前就创建corePoolSize个线程或者一个线程。默认情况下，在创建了线程池后，线程池中的线程数为0，当有任务来之后，就会创建一个线程去执行任务，当线程池中的线程数目达到corePoolSize后，就会把到达的任务放到缓存队列当中；</li>
+<li>maximumPoolSize：线程池最大线程数，这个参数也是一个非常重要的参数，它表示在线程池中最多能创建多少个线程；</li>
+<li>keepAliveTime：表示线程没有任务执行时最多保持多久时间会终止。默认情况下，只有当线程池中的线程数大于corePoolSize时，keepAliveTime才会起作用，直到线程池中的线程数不大于corePoolSize，即当线程池中的线程数大于corePoolSize时，如果一个线程空闲的时间达到keepAliveTime，则会终止，直到线程池中的线程数不超过corePoolSize。但是如果调用了allowCoreThreadTimeOut(boolean)方法，在线程池中的线程数不大于corePoolSize时，keepAliveTime参数也会起作用，直到线程池中的线程数为0；</li>
+<li>unit：参数keepAliveTime的时间单位，有7种取值，在TimeUnit类中有7种静态属性：</li>
+</ul>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre>TimeUnit.DAYS;               <span style="color: #008000;">//</span><span style="color: #008000;">天</span>
+TimeUnit.HOURS;             <span style="color: #008000;">//</span><span style="color: #008000;">小时</span>
+TimeUnit.MINUTES;           <span style="color: #008000;">//</span><span style="color: #008000;">分钟</span>
+TimeUnit.SECONDS;           <span style="color: #008000;">//</span><span style="color: #008000;">秒</span>
+TimeUnit.MILLISECONDS;      <span style="color: #008000;">//</span><span style="color: #008000;">毫秒</span>
+TimeUnit.MICROSECONDS;      <span style="color: #008000;">//</span><span style="color: #008000;">微妙</span>
+TimeUnit.NANOSECONDS;       <span style="color: #008000;">//</span><span style="color: #008000;">纳秒</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<ul>
+<li>workQueue：一个阻塞队列，用来存储等待执行的任务，这个参数的选择也很重要，会对线程池的运行过程产生重大影响，一般来说，这里的阻塞队列有以下几种选择：</li>
+</ul>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">ArrayBlockingQueue;
+LinkedBlockingQueue;
+SynchronousQueue;
+</span></pre>
+</div>
+<p>　　<span style="color: #000000;">ArrayBlockingQueue和PriorityBlockingQueue使用较少，</span>一般使用LinkedBlockingQueue和Synchronous。线程池的排队策略与BlockingQueue有关。</p>
+<ul>
+<li>threadFactory：线程工厂，主要用来创建线程；</li>
+<li>handler：表示当拒绝处理任务时的策略，有以下四种取值：</li>
+</ul>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">ThreadPoolExecutor.AbortPolicy:丢弃任务并抛出RejectedExecutionException异常。 
+ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。 
+ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
+ThreadPoolExecutor.CallerRunsPolicy：由调用线程处理该任务 </span></pre>
+</div>
+<p>&nbsp;　　具体参数的配置与线程池的关系将在下一节讲述。</p>
+<p>　　从上面给出的ThreadPoolExecutor类的代码可以知道，ThreadPoolExecutor继承了AbstractExecutorService，我们来看一下AbstractExecutorService的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_84714" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">abstract</code> <code class="java keyword">class</code> <code class="java plain">AbstractExecutorService </code><code class="java keyword">implements</code> <code class="java plain">ExecutorService {</code></div><div class="line number2 index1 alt1">&nbsp;</div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">protected</code> <code class="java plain">&lt;T&gt; RunnableFuture&lt;T&gt; newTaskFor(Runnable runnable, T value) { };</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">protected</code> <code class="java plain">&lt;T&gt; RunnableFuture&lt;T&gt; newTaskFor(Callable&lt;T&gt; callable) { };</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">Future&lt;?&gt; submit(Runnable task) {};</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result) { };</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task) { };</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">private</code> <code class="java plain">&lt;T&gt; T doInvokeAny(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks,</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">timed, </code><code class="java keyword">long</code> <code class="java plain">nanos)</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException, ExecutionException, TimeoutException {</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">};</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; T invokeAny(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks)</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException, ExecutionException {</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">};</code></div><div class="line number16 index15 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; T invokeAny(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks,</code></div><div class="line number17 index16 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">long</code> <code class="java plain">timeout, TimeUnit unit)</code></div><div class="line number18 index17 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException, ExecutionException, TimeoutException {</code></div><div class="line number19 index18 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">};</code></div><div class="line number20 index19 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks)</code></div><div class="line number21 index20 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException {</code></div><div class="line number22 index21 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">};</code></div><div class="line number23 index22 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks,</code></div><div class="line number24 index23 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">long</code> <code class="java plain">timeout, TimeUnit unit)</code></div><div class="line number25 index24 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException {</code></div><div class="line number26 index25 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">};</code></div><div class="line number27 index26 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　AbstractExecutorService是一个抽象类，它实现了ExecutorService接口。</p>
+<p>　　我们接着看ExecutorService接口的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_412674" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">interface</code> <code class="java plain">ExecutorService </code><code class="java keyword">extends</code> <code class="java plain">Executor {</code></div><div class="line number2 index1 alt1">&nbsp;</div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">void</code> <code class="java plain">shutdown();</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">isShutdown();</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">isTerminated();</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">awaitTermination(</code><code class="java keyword">long</code> <code class="java plain">timeout, TimeUnit unit)</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException;</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task);</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result);</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Future&lt;?&gt; submit(Runnable task);</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks)</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException;</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks,</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">long</code> <code class="java plain">timeout, TimeUnit unit)</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException;</code></div><div class="line number16 index15 alt1">&nbsp;</div><div class="line number17 index16 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; T invokeAny(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks)</code></div><div class="line number18 index17 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException, ExecutionException;</code></div><div class="line number19 index18 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">&lt;T&gt; T invokeAny(Collection&lt;? </code><code class="java keyword">extends</code> <code class="java plain">Callable&lt;T&gt;&gt; tasks,</code></div><div class="line number20 index19 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">long</code> <code class="java plain">timeout, TimeUnit unit)</code></div><div class="line number21 index20 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throws</code> <code class="java plain">InterruptedException, ExecutionException, TimeoutException;</code></div><div class="line number22 index21 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　而ExecutorService又是继承了Executor接口，我们看一下Executor接口的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_891008" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">interface</code> <code class="java plain">Executor {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">void</code> <code class="java plain">execute(Runnable command);</code></div><div class="line number3 index2 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　到这里，大家应该明白了ThreadPoolExecutor、AbstractExecutorService、ExecutorService和Executor几个之间的关系了。</p>
+<p>　　Executor是一个顶层接口，在它里面只声明了一个方法execute(Runnable)，返回值为void，参数为Runnable类型，从字面意思可以理解，就是用来执行传进去的任务的；</p>
+<p>　　然后ExecutorService接口继承了Executor接口，并声明了一些方法：submit、invokeAll、invokeAny以及shutDown等；</p>
+<p>　　抽象类AbstractExecutorService实现了ExecutorService接口，基本实现了ExecutorService中声明的所有方法；</p>
+<p>　　然后ThreadPoolExecutor继承了类AbstractExecutorService。</p>
+<p>　　在ThreadPoolExecutor类中有几个非常重要的方法：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_106086" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">execute()</code></div><div class="line number2 index1 alt1"><code class="java plain">submit()</code></div><div class="line number3 index2 alt2"><code class="java plain">shutdown()</code></div><div class="line number4 index3 alt1"><code class="java plain">shutdownNow()</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　execute()方法实际上是Executor中声明的方法，在ThreadPoolExecutor进行了具体的实现，这个方法是ThreadPoolExecutor的核心方法，通过这个方法可以向线程池提交一个任务，交由线程池去执行。</p>
+<p>　　submit()方法是在ExecutorService中声明的方法，在AbstractExecutorService就已经有了具体的实现，在ThreadPoolExecutor中并没有对其进行重写，这个方法也是用来向线程池提交任务的，但是它和execute()方法不同，它能够返回任务执行的结果，去看submit()方法的实现，会发现它实际上还是调用的execute()方法，只不过它利用了Future来获取任务执行结果（Future相关内容将在下一篇讲述）。</p>
+<p>　　shutdown()和shutdownNow()是用来关闭线程池的。</p>
+<p>　　还有很多其他的方法：</p>
+<p>　　比如：getQueue() 、getPoolSize() 、getActiveCount()、getCompletedTaskCount()等获取与线程池相关属性的方法，有兴趣的朋友可以自行查阅API。</p>
+<h2 style="text-align: left;">二.深入剖析线程池实现原理</h2>
+<p style="text-align: left;">　　在上一节我们从宏观上介绍了ThreadPoolExecutor，下面我们来深入解析一下线程池的具体实现原理，将从下面几个方面讲解：</p>
+<p style="text-align: left;">　　<strong>1.线程池状态</strong></p>
+<p style="text-align: left;"><strong>　　2.任务的执行</strong></p>
+<p style="text-align: left;"><strong>　　3.线程池中的线程初始化</strong></p>
+<p style="text-align: left;"><strong>　　4.任务缓存队列及排队策略</strong></p>
+<p style="text-align: left;"><strong>　　5.任务拒绝策略</strong></p>
+<p style="text-align: left;"><strong>　　6.线程池的关闭</strong></p>
+<p style="text-align: left;"><strong>　　7.线程池容量的动态调整</strong></p>
+<p style="text-align: left;">&nbsp;</p>
+<p style="text-align: left;"><strong>1.线程池状态</strong></p>
+<p style="text-align: left;">　　在ThreadPoolExecutor中定义了一个volatile变量，另外定义了几个static final变量表示线程池的各个状态：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_498299" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">volatile</code> <code class="java keyword">int</code> <code class="java plain">runState;</code></div><div class="line number2 index1 alt1"><code class="java keyword">static</code> <code class="java keyword">final</code> <code class="java keyword">int</code> <code class="java plain">RUNNING&nbsp;&nbsp;&nbsp; = </code><code class="java value">0</code><code class="java plain">;</code></div><div class="line number3 index2 alt2"><code class="java keyword">static</code> <code class="java keyword">final</code> <code class="java keyword">int</code> <code class="java plain">SHUTDOWN&nbsp;&nbsp; = </code><code class="java value">1</code><code class="java plain">;</code></div><div class="line number4 index3 alt1"><code class="java keyword">static</code> <code class="java keyword">final</code> <code class="java keyword">int</code> <code class="java plain">STOP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = </code><code class="java value">2</code><code class="java plain">;</code></div><div class="line number5 index4 alt2"><code class="java keyword">static</code> <code class="java keyword">final</code> <code class="java keyword">int</code> <code class="java plain">TERMINATED = </code><code class="java value">3</code><code class="java plain">;</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　runState表示当前线程池的状态，它是一个volatile变量用来保证线程之间的可见性；</p>
+<p style="text-align: left;">　　下面的几个static final变量表示runState可能的几个取值。</p>
+<p style="text-align: left;">　　当创建线程池后，初始时，线程池处于RUNNING状态；</p>
+<p style="text-align: left;">　　如果调用了shutdown()方法，则线程池处于SHUTDOWN状态，此时线程池不能够接受新的任务，它会等待所有任务执行完毕；</p>
+<p style="text-align: left;">　　如果调用了shutdownNow()方法，则线程池处于STOP状态，此时线程池不能接受新的任务，并且会去尝试终止正在执行的任务；</p>
+<p style="text-align: left;">　　当线程池处于SHUTDOWN或STOP状态，并且所有工作线程已经销毁，任务缓存队列已经清空或执行结束后，线程池被设置为TERMINATED状态。</p>
+<p style="text-align: left;"><strong>2.任务的执行</strong></p>
+<p style="text-align: left;">　　在了解将任务提交给线程池到任务执行完毕整个过程之前，我们先来看一下ThreadPoolExecutor类中其他的一些比较重要成员变量：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_536458" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java keyword">final</code> <code class="java plain">BlockingQueue&lt;Runnable&gt; workQueue;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//任务缓存队列，用来存放等待执行的任务</code></div><div class="line number2 index1 alt1"><code class="java keyword">private</code> <code class="java keyword">final</code> <code class="java plain">ReentrantLock mainLock = </code><code class="java keyword">new</code> <code class="java plain">ReentrantLock();&nbsp;&nbsp; </code><code class="java comments">//线程池的主要状态锁，对线程池状态（比如线程池大小</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//、runState等）的改变都要使用这个锁</code></div><div class="line number4 index3 alt1"><code class="java keyword">private</code> <code class="java keyword">final</code> <code class="java plain">HashSet&lt;Worker&gt; workers = </code><code class="java keyword">new</code> <code class="java plain">HashSet&lt;Worker&gt;();&nbsp; </code><code class="java comments">//用来存放工作集</code></div><div class="line number5 index4 alt2">&nbsp;</div><div class="line number6 index5 alt1"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java keyword">long</code>&nbsp; <code class="java plain">keepAliveTime;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//线程存货时间&nbsp;&nbsp;&nbsp; </code></div><div class="line number7 index6 alt2"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java keyword">boolean</code> <code class="java plain">allowCoreThreadTimeOut;&nbsp;&nbsp; </code><code class="java comments">//是否允许为核心线程设置存活时间</code></div><div class="line number8 index7 alt1"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java keyword">int</code>&nbsp;&nbsp; <code class="java plain">corePoolSize;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//核心池的大小（即线程池中的线程数目大于这个参数时，提交的任务会被放进任务缓存队列）</code></div><div class="line number9 index8 alt2"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java keyword">int</code>&nbsp;&nbsp; <code class="java plain">maximumPoolSize;&nbsp;&nbsp; </code><code class="java comments">//线程池最大能容忍的线程数</code></div><div class="line number10 index9 alt1">&nbsp;</div><div class="line number11 index10 alt2"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java keyword">int</code>&nbsp;&nbsp; <code class="java plain">poolSize;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//线程池中当前的线程数</code></div><div class="line number12 index11 alt1">&nbsp;</div><div class="line number13 index12 alt2"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java plain">RejectedExecutionHandler handler; </code><code class="java comments">//任务拒绝策略</code></div><div class="line number14 index13 alt1">&nbsp;</div><div class="line number15 index14 alt2"><code class="java keyword">private</code> <code class="java keyword">volatile</code> <code class="java plain">ThreadFactory threadFactory;&nbsp;&nbsp; </code><code class="java comments">//线程工厂，用来创建线程</code></div><div class="line number16 index15 alt1">&nbsp;</div><div class="line number17 index16 alt2"><code class="java keyword">private</code> <code class="java keyword">int</code> <code class="java plain">largestPoolSize;&nbsp;&nbsp; </code><code class="java comments">//用来记录线程池中曾经出现过的最大线程数</code></div><div class="line number18 index17 alt1">&nbsp;</div><div class="line number19 index18 alt2"><code class="java keyword">private</code> <code class="java keyword">long</code> <code class="java plain">completedTaskCount;&nbsp;&nbsp; </code><code class="java comments">//用来记录已经执行完毕的任务个数</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　每个变量的作用都已经标明出来了，这里要重点解释一下corePoolSize、maximumPoolSize、largestPoolSize三个变量。</p>
+<p>　　corePoolSize在很多地方被翻译成核心池大小，其实我的理解这个就是线程池的大小。举个简单的例子：</p>
+<p>　　假如有一个工厂，工厂里面有10个工人，每个工人同时只能做一件任务。</p>
+<p>　　因此只要当10个工人中有工人是空闲的，来了任务就分配给空闲的工人做；</p>
+<p>　　当10个工人都有任务在做时，如果还来了任务，就把任务进行排队等待；</p>
+<p>　　如果说新任务数目增长的速度远远大于工人做任务的速度，那么此时工厂主管可能会想补救措施，比如重新招4个临时工人进来；</p>
+<p>　　然后就将任务也分配给这4个临时工人做；</p>
+<p>　　如果说着14个工人做任务的速度还是不够，此时工厂主管可能就要考虑不再接收新的任务或者抛弃前面的一些任务了。</p>
+<p>　　当这14个工人当中有人空闲时，而新任务增长的速度又比较缓慢，工厂主管可能就考虑辞掉4个临时工了，只保持原来的10个工人，毕竟请额外的工人是要花钱的。</p>
+<p>&nbsp;</p>
+<p>　　这个例子中的corePoolSize就是10，而maximumPoolSize就是14（10+4）。</p>
+<p>　　也就是说corePoolSize就是线程池大小，maximumPoolSize在我看来是线程池的一种补救措施，即任务量突然过大时的一种补救措施。</p>
+<p>　　不过为了方便理解，在本文后面还是将corePoolSize翻译成核心池大小。</p>
+<p>　　largestPoolSize只是一个用来起记录作用的变量，用来记录线程池中曾经有过的最大线程数目，跟线程池的容量没有任何关系。</p>
+<p>&nbsp;</p>
+<p>　　下面我们进入正题，看一下任务从提交到最终执行完毕经历了哪些过程。</p>
+<p>　　在ThreadPoolExecutor类中，最核心的任务提交方法是execute()方法，虽然通过submit也可以提交任务，但是实际上submit方法里面最终调用的还是execute()方法，所以我们只需要研究execute()方法的实现原理即可：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_64379" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">void</code> <code class="java plain">execute(Runnable command) {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(command == </code><code class="java keyword">null</code><code class="java plain">)</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throw</code> <code class="java keyword">new</code> <code class="java plain">NullPointerException();</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(poolSize &gt;= corePoolSize || !addIfUnderCorePoolSize(command)) {</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runState == RUNNING &amp;&amp; workQueue.offer(command)) {</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runState != RUNNING || poolSize == </code><code class="java value">0</code><code class="java plain">)</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">ensureQueuedTaskHandled(command);</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">else</code> <code class="java keyword">if</code> <code class="java plain">(!addIfUnderMaximumPoolSize(command))</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">reject(command); </code><code class="java comments">// is shutdown or saturated</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　上面的代码可能看起来不是那么容易理解，下面我们一句一句解释：</p>
+<p>　　首先，判断提交的任务command是否为null，若是null，则抛出空指针异常；</p>
+<p>　　接着是这句，这句要好好理解一下：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_376299" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">(poolSize &gt;= corePoolSize || !addIfUnderCorePoolSize(command))</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　由于是或条件运算符，所以先计算前半部分的值，如果线程池中当前线程数不小于核心池大小，那么就会直接进入下面的if语句块了。</p>
+<p>　　如果线程池中当前线程数小于核心池大小，则接着执行后半部分，也就是执行</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_580399" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">addIfUnderCorePoolSize(command)</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>　　如果执行完addIfUnderCorePoolSize这个方法返回false，则继续执行下面的if语句块，否则整个方法就直接执行完毕了。</p>
+<p>　　如果执行完addIfUnderCorePoolSize这个方法返回false，然后接着判断：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_129995" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">(runState == RUNNING &amp;&amp; workQueue.offer(command))</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　如果当前线程池处于RUNNING状态，则将任务放入任务缓存队列；如果当前线程池不处于RUNNING状态或者任务放入缓存队列失败，则执行：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_116013" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">addIfUnderMaximumPoolSize(command)</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>　　如果执行addIfUnderMaximumPoolSize方法失败，则执行reject()方法进行任务拒绝处理。</p>
+<p>　　回到前面：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_99117" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">(runState == RUNNING &amp;&amp; workQueue.offer(command))</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　这句的执行，如果说当前线程池处于RUNNING状态且将任务放入任务缓存队列成功，则继续进行判断：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_306136" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">(runState != RUNNING || poolSize == </code><code class="java value">0</code><code class="java plain">)</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　这句判断是为了防止在将此任务添加进任务缓存队列的同时其他线程突然调用shutdown或者shutdownNow方法关闭了线程池的一种应急措施。如果是这样就执行：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_273024" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">ensureQueuedTaskHandled(command)</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　进行应急处理，从名字可以看出是保证 添加到任务缓存队列中的任务得到处理。</p>
+<p>　　我们接着看2个关键方法的实现：addIfUnderCorePoolSize和addIfUnderMaximumPoolSize：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_400765" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java keyword">boolean</code> <code class="java plain">addIfUnderCorePoolSize(Runnable firstTask) {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread t = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock mainLock = </code><code class="java keyword">this</code><code class="java plain">.mainLock;</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.lock();</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(poolSize &lt; corePoolSize &amp;&amp; runState == RUNNING)</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">t = addThread(firstTask);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//创建线程去执行firstTask任务&nbsp;&nbsp;&nbsp; </code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.unlock();</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(t == </code><code class="java keyword">null</code><code class="java plain">)</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">false</code><code class="java plain">;</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">t.start();</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">true</code><code class="java plain">;</code></div><div class="line number15 index14 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　这个是addIfUnderCorePoolSize方法的具体实现，从名字可以看出它的意图就是当低于核心吃大小时执行的方法。下面看其具体实现，首先获取到锁，因为这地方涉及到线程池状态的变化，先通过if语句判断当前线程池中的线程数目是否小于核心池大小，有朋友也许会有疑问：前面在execute()方法中不是已经判断过了吗，只有线程池当前线程数目小于核心池大小才会执行addIfUnderCorePoolSize方法的，为何这地方还要继续判断？原因很简单，前面的判断过程中并没有加锁，因此可能在execute方法判断的时候poolSize小于corePoolSize，而判断完之后，在其他线程中又向线程池提交了任务，就可能导致poolSize不小于corePoolSize了，所以需要在这个地方继续判断。然后接着判断线程池的状态是否为RUNNING，原因也很简单，因为有可能在其他线程中调用了shutdown或者shutdownNow方法。然后就是执行</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_152948" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">t = addThread(firstTask);</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　这个方法也非常关键，传进去的参数为提交的任务，返回值为Thread类型。然后接着在下面判断t是否为空，为空则表明创建线程失败（即poolSize&gt;=corePoolSize或者runState不等于RUNNING），否则调用t.start()方法启动线程。</p>
+<p>　　我们来看一下addThread方法的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_173266" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java plain">Thread addThread(Runnable firstTask) {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Worker w = </code><code class="java keyword">new</code> <code class="java plain">Worker(firstTask);</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread t = threadFactory.newThread(w);&nbsp; </code><code class="java comments">//创建一个线程，执行任务&nbsp;&nbsp;&nbsp; </code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(t != </code><code class="java keyword">null</code><code class="java plain">) {</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">w.thread = t;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//将创建的线程的引用赋值为w的成员变量&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">workers.add(w);</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">int</code> <code class="java plain">nt = ++poolSize;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//当前线程数加1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(nt &gt; largestPoolSize)</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">largestPoolSize = nt;</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">t;</code></div><div class="line number12 index11 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　在addThread方法中，首先用提交的任务创建了一个Worker对象，然后调用线程工厂threadFactory创建了一个新的线程t，然后将线程t的引用赋值给了Worker对象的成员变量thread，接着通过workers.add(w)将Worker对象添加到工作集当中。</p>
+<p>　　下面我们看一下Worker类的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_581737" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div><div class="line number34 index33 alt1">34</div><div class="line number35 index34 alt2">35</div><div class="line number36 index35 alt1">36</div><div class="line number37 index36 alt2">37</div><div class="line number38 index37 alt1">38</div><div class="line number39 index38 alt2">39</div><div class="line number40 index39 alt1">40</div><div class="line number41 index40 alt2">41</div><div class="line number42 index41 alt1">42</div><div class="line number43 index42 alt2">43</div><div class="line number44 index43 alt1">44</div><div class="line number45 index44 alt2">45</div><div class="line number46 index45 alt1">46</div><div class="line number47 index46 alt2">47</div><div class="line number48 index47 alt1">48</div><div class="line number49 index48 alt2">49</div><div class="line number50 index49 alt1">50</div><div class="line number51 index50 alt2">51</div><div class="line number52 index51 alt1">52</div><div class="line number53 index52 alt2">53</div><div class="line number54 index53 alt1">54</div><div class="line number55 index54 alt2">55</div><div class="line number56 index55 alt1">56</div><div class="line number57 index56 alt2">57</div><div class="line number58 index57 alt1">58</div><div class="line number59 index58 alt2">59</div><div class="line number60 index59 alt1">60</div><div class="line number61 index60 alt2">61</div><div class="line number62 index61 alt1">62</div><div class="line number63 index62 alt2">63</div><div class="line number64 index63 alt1">64</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java keyword">final</code> <code class="java keyword">class</code> <code class="java plain">Worker </code><code class="java keyword">implements</code> <code class="java plain">Runnable {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">private</code> <code class="java keyword">final</code> <code class="java plain">ReentrantLock runLock = </code><code class="java keyword">new</code> <code class="java plain">ReentrantLock();</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">private</code> <code class="java plain">Runnable firstTask;</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">volatile</code> <code class="java keyword">long</code> <code class="java plain">completedTasks;</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread thread;</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Worker(Runnable firstTask) {</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">this</code><code class="java plain">.firstTask = firstTask;</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">isActive() {</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">runLock.isLocked();</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">void</code> <code class="java plain">interruptIfIdle() {</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock runLock = </code><code class="java keyword">this</code><code class="java plain">.runLock;</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runLock.tryLock()) {</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number16 index15 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(thread != Thread.currentThread())</code></div><div class="line number17 index16 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">thread.interrupt();</code></div><div class="line number18 index17 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number19 index18 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runLock.unlock();</code></div><div class="line number20 index19 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number21 index20 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number22 index21 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number23 index22 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">void</code> <code class="java plain">interruptNow() {</code></div><div class="line number24 index23 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">thread.interrupt();</code></div><div class="line number25 index24 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number26 index25 alt1">&nbsp;</div><div class="line number27 index26 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">private</code> <code class="java keyword">void</code> <code class="java plain">runTask(Runnable task) {</code></div><div class="line number28 index27 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock runLock = </code><code class="java keyword">this</code><code class="java plain">.runLock;</code></div><div class="line number29 index28 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runLock.lock();</code></div><div class="line number30 index29 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number31 index30 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runState &lt; STOP &amp;&amp;</code></div><div class="line number32 index31 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread.interrupted() &amp;&amp;</code></div><div class="line number33 index32 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runState &gt;= STOP)</code></div><div class="line number34 index33 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">ran = </code><code class="java keyword">false</code><code class="java plain">;</code></div><div class="line number35 index34 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">beforeExecute(thread, task);&nbsp;&nbsp; </code><code class="java comments">//beforeExecute方法是ThreadPoolExecutor类的一个方法，没有具体实现，用户可以根据</code></div><div class="line number36 index35 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//自己需要重载这个方法和后面的afterExecute方法来进行一些统计信息，比如某个任务的执行时间等&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div><div class="line number37 index36 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number38 index37 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">task.run();</code></div><div class="line number39 index38 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">ran = </code><code class="java keyword">true</code><code class="java plain">;</code></div><div class="line number40 index39 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">afterExecute(task, </code><code class="java keyword">null</code><code class="java plain">);</code></div><div class="line number41 index40 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">++completedTasks;</code></div><div class="line number42 index41 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">catch</code> <code class="java plain">(RuntimeException ex) {</code></div><div class="line number43 index42 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(!ran)</code></div><div class="line number44 index43 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">afterExecute(task, ex);</code></div><div class="line number45 index44 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">throw</code> <code class="java plain">ex;</code></div><div class="line number46 index45 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number47 index46 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number48 index47 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runLock.unlock();</code></div><div class="line number49 index48 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number50 index49 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number51 index50 alt2">&nbsp;</div><div class="line number52 index51 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java keyword">void</code> <code class="java plain">run() {</code></div><div class="line number53 index52 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number54 index53 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Runnable task = firstTask;</code></div><div class="line number55 index54 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">firstTask = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number56 index55 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">while</code> <code class="java plain">(task != </code><code class="java keyword">null</code> <code class="java plain">|| (task = getTask()) != </code><code class="java keyword">null</code><code class="java plain">) {</code></div><div class="line number57 index56 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runTask(task);</code></div><div class="line number58 index57 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">task = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number59 index58 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number60 index59 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number61 index60 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">workerDone(</code><code class="java keyword">this</code><code class="java plain">);&nbsp;&nbsp; </code><code class="java comments">//当任务队列中没有任务时，进行清理工作&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code></div><div class="line number62 index61 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number63 index62 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number64 index63 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　它实际上实现了Runnable接口，因此上面的Thread t = threadFactory.newThread(w);效果跟下面这句的效果基本一样：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_390540" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">Thread t = </code><code class="java keyword">new</code> <code class="java plain">Thread(w);</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　相当于传进去了一个Runnable任务，在线程t中执行这个Runnable。</p>
+<p>　　既然Worker实现了Runnable接口，那么自然最核心的方法便是run()方法了：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_475601" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">void</code> <code class="java plain">run() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Runnable task = firstTask;</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">firstTask = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">while</code> <code class="java plain">(task != </code><code class="java keyword">null</code> <code class="java plain">|| (task = getTask()) != </code><code class="java keyword">null</code><code class="java plain">) {</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runTask(task);</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">task = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">workerDone(</code><code class="java keyword">this</code><code class="java plain">);</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　从run方法的实现可以看出，它首先执行的是通过构造器传进来的任务firstTask，在调用runTask()执行完firstTask之后，在while循环里面不断通过getTask()去取新的任务来执行，那么去哪里取呢？自然是从任务缓存队列里面去取，getTask是ThreadPoolExecutor类中的方法，并不是Worker类中的方法，下面是getTask方法的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_828661" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">Runnable getTask() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">for</code> <code class="java plain">(;;) {</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">int</code> <code class="java plain">state = runState;</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(state &gt; SHUTDOWN)</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Runnable r;</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(state == SHUTDOWN)&nbsp; </code><code class="java comments">// Help drain queue</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">r = workQueue.poll();</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">else</code> <code class="java keyword">if</code> <code class="java plain">(poolSize &gt; corePoolSize || allowCoreThreadTimeOut) </code><code class="java comments">//如果线程数大于核心池大小或者允许为核心池线程设置空闲时间，</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//则通过poll取任务，若等待一定的时间取不到任务，则返回null</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">r = workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS);</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">else</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">r = workQueue.take();</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(r != </code><code class="java keyword">null</code><code class="java plain">)</code></div><div class="line number16 index15 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">r;</code></div><div class="line number17 index16 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(workerCanExit()) {&nbsp;&nbsp;&nbsp; </code><code class="java comments">//如果没取到任务，即r为null，则判断当前的worker是否可以退出</code></div><div class="line number18 index17 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runState &gt;= SHUTDOWN) </code><code class="java comments">// Wake up others</code></div><div class="line number19 index18 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">interruptIdleWorkers();&nbsp;&nbsp; </code><code class="java comments">//中断处于空闲状态的worker</code></div><div class="line number20 index19 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number21 index20 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number22 index21 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">// Else retry</code></div><div class="line number23 index22 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">catch</code> <code class="java plain">(InterruptedException ie) {</code></div><div class="line number24 index23 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">// On interruption, re-check runState</code></div><div class="line number25 index24 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number26 index25 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number27 index26 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　在getTask中，先判断当前线程池状态，如果runState大于SHUTDOWN（即为STOP或者TERMINATED），则直接返回null。</p>
+<p>　　如果runState为SHUTDOWN或者RUNNING，则从任务缓存队列取任务。</p>
+<p>　　如果当前线程池的线程数大于核心池大小corePoolSize或者允许为核心池中的线程设置空闲存活时间，则调用poll(time,timeUnit)来取任务，这个方法会等待一定的时间，如果取不到任务就返回null。</p>
+<p>　　然后判断取到的任务r是否为null，为null则通过调用workerCanExit()方法来判断当前worker是否可以退出，我们看一下workerCanExit()的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_478716" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java keyword">boolean</code> <code class="java plain">workerCanExit() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock mainLock = </code><code class="java keyword">this</code><code class="java plain">.mainLock;</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.lock();</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">boolean</code> <code class="java plain">canExit;</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//如果runState大于等于STOP，或者任务缓存队列为空了</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//或者&nbsp; 允许为核心池线程设置空闲存活时间并且线程池中的线程数目大于1</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">canExit = runState &gt;= STOP ||</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">workQueue.isEmpty() ||</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">(allowCoreThreadTimeOut &amp;&amp;</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">poolSize &gt; Math.max(</code><code class="java value">1</code><code class="java plain">, corePoolSize));</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.unlock();</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">canExit;</code></div><div class="line number16 index15 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　也就是说如果线程池处于STOP状态、或者任务队列已为空或者允许为核心池线程设置空闲存活时间并且线程数大于1时，允许worker退出。如果允许worker退出，则调用interruptIdleWorkers()中断处于空闲状态的worker，我们看一下interruptIdleWorkers()的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_792739" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">void</code> <code class="java plain">interruptIdleWorkers() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock mainLock = </code><code class="java keyword">this</code><code class="java plain">.mainLock;</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.lock();</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">for</code> <code class="java plain">(Worker w : workers)&nbsp; </code><code class="java comments">//实际上调用的是worker的interruptIfIdle()方法</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">w.interruptIfIdle();</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.unlock();</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number10 index9 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　从实现可以看出，它实际上调用的是worker的interruptIfIdle()方法，在worker的interruptIfIdle()方法中：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_151405" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">void</code> <code class="java plain">interruptIfIdle() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock runLock = </code><code class="java keyword">this</code><code class="java plain">.runLock;</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(runLock.tryLock()) {&nbsp;&nbsp;&nbsp; </code><code class="java comments">//注意这里，是调用tryLock()来获取锁的，因为如果当前worker正在执行任务，锁已经被获取了，是无法获取到锁的</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java comments">//如果成功获取了锁，说明当前worker处于空闲状态</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(thread != Thread.currentThread())&nbsp;&nbsp; </code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">thread.interrupt();</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">runLock.unlock();</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;&nbsp;　　这里有一个非常巧妙的设计方式，假如我们来设计线程池，可能会有一个任务分派线程，当发现有线程空闲时，就从任务缓存队列中取一个任务交给空闲线程执行。但是在这里，并没有采用这样的方式，因为这样会要额外地对任务分派线程进行管理，无形地会增加难度和复杂度，这里直接让执行完任务的线程去任务缓存队列里面取任务来执行。</p>
+<p>&nbsp;　　我们再看addIfUnderMaximumPoolSize方法的实现，这个方法的实现思想和addIfUnderCorePoolSize方法的实现思想非常相似，唯一的区别在于addIfUnderMaximumPoolSize方法是在线程池中的线程数达到了核心池大小并且往任务队列中添加任务失败的情况下执行的：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_874101" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">private</code> <code class="java keyword">boolean</code> <code class="java plain">addIfUnderMaximumPoolSize(Runnable firstTask) {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread t = </code><code class="java keyword">null</code><code class="java plain">;</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">final</code> <code class="java plain">ReentrantLock mainLock = </code><code class="java keyword">this</code><code class="java plain">.mainLock;</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.lock();</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(poolSize &lt; maximumPoolSize &amp;&amp; runState == RUNNING)</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">t = addThread(firstTask);</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">finally</code> <code class="java plain">{</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">mainLock.unlock();</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">if</code> <code class="java plain">(t == </code><code class="java keyword">null</code><code class="java plain">)</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">false</code><code class="java plain">;</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">t.start();</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">true</code><code class="java plain">;</code></div><div class="line number15 index14 alt2"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　看到没有，其实它和addIfUnderCorePoolSize方法的实现基本一模一样，只是if语句判断条件中的poolSize &lt; maximumPoolSize不同而已。</p>
+<p>　　到这里，大部分朋友应该对任务提交给线程池之后到被执行的整个过程有了一个基本的了解，下面总结一下：</p>
+<p>　　1）首先，要清楚corePoolSize和maximumPoolSize的含义；</p>
+<p>　　2）其次，要知道Worker是用来起到什么作用的；</p>
+<p>　　3）要知道任务提交给线程池之后的处理策略，这里总结一下主要有4点：</p>
+<ul>
+<li>如果当前线程池中的线程数目小于corePoolSize，则每来一个任务，就会创建一个线程去执行这个任务；</li>
+<li>如果当前线程池中的线程数目&gt;=corePoolSize，则每来一个任务，会尝试将其添加到任务缓存队列当中，若添加成功，则该任务会等待空闲线程将其取出去执行；若添加失败（一般来说是任务缓存队列已满），则会尝试创建新的线程去执行这个任务；</li>
+<li>如果当前线程池中的线程数目达到maximumPoolSize，则会采取任务拒绝策略进行处理；</li>
+<li>如果线程池中的线程数量大于 corePoolSize时，如果某线程空闲时间超过keepAliveTime，线程将被终止，直至线程池中的线程数目不大于corePoolSize；如果允许为核心池中的线程设置存活时间，那么核心池中的线程空闲时间超过keepAliveTime，线程也会被终止。</li>
+</ul>
+<p style="text-align: left;"><strong>3.线程池中的线程初始化</strong></p>
+<p style="text-align: left;">　　默认情况下，创建线程池之后，线程池中是没有线程的，需要提交任务之后才会创建线程。</p>
+<p style="text-align: left;">　　在实际中如果需要线程池创建之后立即创建线程，可以通过以下两个方法办到：</p>
+<ul>
+<li style="text-align: left;">prestartCoreThread()：初始化一个核心线程；</li>
+<li style="text-align: left;">prestartAllCoreThreads()：初始化所有核心线程</li>
+</ul>
+<p style="text-align: left;">　　下面是这2个方法的实现：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_590326" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">boolean</code> <code class="java plain">prestartCoreThread() {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">addIfUnderCorePoolSize(</code><code class="java keyword">null</code><code class="java plain">); </code><code class="java comments">//注意传进去的参数是null</code></div><div class="line number3 index2 alt2"><code class="java plain">}</code></div><div class="line number4 index3 alt1">&nbsp;</div><div class="line number5 index4 alt2"><code class="java keyword">public</code> <code class="java keyword">int</code> <code class="java plain">prestartAllCoreThreads() {</code></div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">int</code> <code class="java plain">n = </code><code class="java value">0</code><code class="java plain">;</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">while</code> <code class="java plain">(addIfUnderCorePoolSize(</code><code class="java keyword">null</code><code class="java plain">))</code><code class="java comments">//注意传进去的参数是null</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">++n;</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java plain">n;</code></div><div class="line number10 index9 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　注意上面传进去的参数是null，根据第2小节的分析可知如果传进去的参数为null，则最后执行线程会阻塞在getTask方法中的</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_176900" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">r = workQueue.take();</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　即等待任务队列中有任务。</p>
+<p style="text-align: left;"><strong>4.任务缓存队列及排队策略</strong></p>
+<p style="text-align: left;">　　在前面我们多次提到了任务缓存队列，即workQueue，它用来存放等待执行的任务。</p>
+<p style="text-align: left;">　　workQueue的类型为BlockingQueue&lt;Runnable&gt;，通常可以取下面三种类型：</p>
+<p style="text-align: left;">　　1）ArrayBlockingQueue：基于数组的先进先出队列，此队列创建时必须指定大小；</p>
+<p style="text-align: left;">　　2）LinkedBlockingQueue：基于链表的先进先出队列，如果创建时没有指定此队列大小，则默认为Integer.MAX_VALUE；</p>
+<p style="text-align: left;">　　3）synchronousQueue：这个队列比较特殊，它不会保存提交的任务，而是将直接新建一个线程来执行新来的任务。</p>
+<p style="text-align: left;"><strong>5.任务拒绝策略</strong></p>
+<p style="text-align: left;">　　当线程池的任务缓存队列已满并且线程池中的线程数目达到maximumPoolSize，如果还有任务到来就会采取任务拒绝策略，通常有以下四种策略：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_627923" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">ThreadPoolExecutor.AbortPolicy:丢弃任务并抛出RejectedExecutionException异常。 </code></div><div class="line number2 index1 alt1"><code class="java plain">ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。 </code></div><div class="line number3 index2 alt2"><code class="java plain">ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）</code></div><div class="line number4 index3 alt1"><code class="java plain">ThreadPoolExecutor.CallerRunsPolicy：由调用线程处理该任务 </code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p><strong>6.线程池的关闭</strong></p>
+<p>　　ThreadPoolExecutor提供了两个方法，用于线程池的关闭，分别是shutdown()和shutdownNow()，其中：</p>
+<ul>
+<li>shutdown()：不会立即终止线程池，而是要等所有任务缓存队列中的任务都执行完后才终止，但再也不会接受新的任务</li>
+<li>shutdownNow()：立即终止线程池，并尝试打断正在执行的任务，并且清空任务缓存队列，返回尚未执行的任务</li>
+</ul>
+<p style="text-align: left;"><strong>7.线程池容量的动态调整</strong></p>
+<p style="text-align: left;">　　ThreadPoolExecutor提供了动态调整线程池容量大小的方法：setCorePoolSize()和setMaximumPoolSize()，</p>
+<ul>
+<li style="text-align: left;">setCorePoolSize：设置核心池大小</li>
+<li style="text-align: left;">setMaximumPoolSize：设置线程池最大能创建的线程数目大小</li>
+</ul>
+<p style="text-align: left;">　　当上述参数从小变大时，ThreadPoolExecutor进行线程赋值，还可能立即创建新的线程来执行任务。</p>
+<h2 style="text-align: left;">三.使用示例</h2>
+<p style="text-align: left;">　　前面我们讨论了关于线程池的实现原理，这一节我们来看一下它的具体使用：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_87365" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div><div class="line number17 index16 alt2">17</div><div class="line number18 index17 alt1">18</div><div class="line number19 index18 alt2">19</div><div class="line number20 index19 alt1">20</div><div class="line number21 index20 alt2">21</div><div class="line number22 index21 alt1">22</div><div class="line number23 index22 alt2">23</div><div class="line number24 index23 alt1">24</div><div class="line number25 index24 alt2">25</div><div class="line number26 index25 alt1">26</div><div class="line number27 index26 alt2">27</div><div class="line number28 index27 alt1">28</div><div class="line number29 index28 alt2">29</div><div class="line number30 index29 alt1">30</div><div class="line number31 index30 alt2">31</div><div class="line number32 index31 alt1">32</div><div class="line number33 index32 alt2">33</div><div class="line number34 index33 alt1">34</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">Test {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java keyword">void</code> <code class="java plain">main(String[] args) {&nbsp;&nbsp;&nbsp; </code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">ThreadPoolExecutor executor = </code><code class="java keyword">new</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java value">5</code><code class="java plain">, </code><code class="java value">10</code><code class="java plain">, </code><code class="java value">200</code><code class="java plain">, TimeUnit.MILLISECONDS, </code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">new</code> <code class="java plain">ArrayBlockingQueue&lt;Runnable&gt;(</code><code class="java value">5</code><code class="java plain">));</code></div><div class="line number5 index4 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number6 index5 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">for</code><code class="java plain">(</code><code class="java keyword">int</code> <code class="java plain">i=</code><code class="java value">0</code><code class="java plain">;i&lt;</code><code class="java value">15</code><code class="java plain">;i++){</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">MyTask myTask = </code><code class="java keyword">new</code> <code class="java plain">MyTask(i);</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">executor.execute(myTask);</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">System.out.println(</code><code class="java string">"线程池中线程数目："</code><code class="java plain">+executor.getPoolSize()+</code><code class="java string">"，队列中等待执行的任务数目："</code><code class="java plain">+</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">executor.getQueue().size()+</code><code class="java string">"，已执行玩别的任务数目："</code><code class="java plain">+executor.getCompletedTaskCount());</code></div><div class="line number11 index10 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">executor.shutdown();</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code></div><div class="line number14 index13 alt1"><code class="java plain">}</code></div><div class="line number15 index14 alt2">&nbsp;</div><div class="line number16 index15 alt1">&nbsp;</div><div class="line number17 index16 alt2"><code class="java keyword">class</code> <code class="java plain">MyTask </code><code class="java keyword">implements</code> <code class="java plain">Runnable {</code></div><div class="line number18 index17 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">private</code> <code class="java keyword">int</code> <code class="java plain">taskNum;</code></div><div class="line number19 index18 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number20 index19 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java plain">MyTask(</code><code class="java keyword">int</code> <code class="java plain">num) {</code></div><div class="line number21 index20 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">this</code><code class="java plain">.taskNum = num;</code></div><div class="line number22 index21 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number23 index22 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code>&nbsp;</div><div class="line number24 index23 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java color1">@Override</code></div><div class="line number25 index24 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">public</code> <code class="java keyword">void</code> <code class="java plain">run() {</code></div><div class="line number26 index25 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">System.out.println(</code><code class="java string">"正在执行task "</code><code class="java plain">+taskNum);</code></div><div class="line number27 index26 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number28 index27 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread.currentThread().sleep(</code><code class="java value">4000</code><code class="java plain">);</code></div><div class="line number29 index28 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">} </code><code class="java keyword">catch</code> <code class="java plain">(InterruptedException e) {</code></div><div class="line number30 index29 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">e.printStackTrace();</code></div><div class="line number31 index30 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number32 index31 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">System.out.println(</code><code class="java string">"task "</code><code class="java plain">+taskNum+</code><code class="java string">"执行完毕"</code><code class="java plain">);</code></div><div class="line number33 index32 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">}</code></div><div class="line number34 index33 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　执行结果：</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show(&#39;7fe0da96-98d0-4ba0-9c2e-2bf3aa16d1bd&#39;)"><img id="code_img_closed_7fe0da96-98d0-4ba0-9c2e-2bf3aa16d1bd" class="code_img_closed" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/ContractedBlock.gif" alt="" style="display: inline;"><img id="code_img_opened_7fe0da96-98d0-4ba0-9c2e-2bf3aa16d1bd" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide(&#39;7fe0da96-98d0-4ba0-9c2e-2bf3aa16d1bd&#39;,event)" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/ExpandedBlockStart.gif" alt="">
+<div id="cnblogs_code_open_7fe0da96-98d0-4ba0-9c2e-2bf3aa16d1bd" class="cnblogs_code_hide" style="display: none;"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre>正在执行task 0<span style="color: #000000;">
+线程池中线程数目：</span>1，队列中等待执行的任务数目：0，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>2，队列中等待执行的任务数目：0，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>1<span style="color: #000000;">
+线程池中线程数目：</span>3，队列中等待执行的任务数目：0，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>2<span style="color: #000000;">
+线程池中线程数目：</span>4，队列中等待执行的任务数目：0，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>3<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：0，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>4<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：1，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：2，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：3，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：4，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>5，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+线程池中线程数目：</span>6，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>10<span style="color: #000000;">
+线程池中线程数目：</span>7，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>11<span style="color: #000000;">
+线程池中线程数目：</span>8，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>12<span style="color: #000000;">
+线程池中线程数目：</span>9，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>13<span style="color: #000000;">
+线程池中线程数目：</span>10，队列中等待执行的任务数目：5，已执行玩别的任务数目：0<span style="color: #000000;">
+正在执行task </span>14<span style="color: #000000;">
+task 3执行完毕
+task 0执行完毕
+task 2执行完毕
+task 1执行完毕
+正在执行task </span>8<span style="color: #000000;">
+正在执行task </span>7<span style="color: #000000;">
+正在执行task </span>6<span style="color: #000000;">
+正在执行task </span>5<span style="color: #000000;">
+task 4执行完毕
+task 10执行完毕
+task 11执行完毕
+task 13执行完毕
+task 12执行完毕
+正在执行task </span>9<span style="color: #000000;">
+task 14执行完毕
+task 8执行完毕
+task 5执行完毕
+task 7执行完毕
+task 6执行完毕
+task 9执行完毕</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<span class="cnblogs_code_collapse" style="display: inline;">View Code</span></div>
+<p>　　从执行结果可以看出，当线程池中线程的数目大于5时，便将任务放入任务缓存队列里面，当任务缓存队列满了之后，便创建新的线程。如果上面程序中，将for循环中改成执行20个任务，就会抛出任务拒绝异常了。</p>
+<p>　　不过在java doc中，并不提倡我们直接使用ThreadPoolExecutor，而是使用Executors类中提供的几个静态方法来创建线程池：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_331771" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java plain">Executors.newCachedThreadPool();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </code><code class="java comments">//创建一个缓冲池，缓冲池容量大小为Integer.MAX_VALUE</code></div><div class="line number2 index1 alt1"><code class="java plain">Executors.newSingleThreadExecutor();&nbsp;&nbsp; </code><code class="java comments">//创建容量为1的缓冲池</code></div><div class="line number3 index2 alt2"><code class="java plain">Executors.newFixedThreadPool(</code><code class="java keyword">int</code><code class="java plain">);&nbsp;&nbsp;&nbsp; </code><code class="java comments">//创建固定容量大小的缓冲池</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>&nbsp;　　下面是这三个静态方法的具体实现;</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div><div id="highlighter_310784" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div><div class="line number7 index6 alt2">7</div><div class="line number8 index7 alt1">8</div><div class="line number9 index8 alt2">9</div><div class="line number10 index9 alt1">10</div><div class="line number11 index10 alt2">11</div><div class="line number12 index11 alt1">12</div><div class="line number13 index12 alt2">13</div><div class="line number14 index13 alt1">14</div><div class="line number15 index14 alt2">15</div><div class="line number16 index15 alt1">16</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java plain">ExecutorService newFixedThreadPool(</code><code class="java keyword">int</code> <code class="java plain">nThreads) {</code></div><div class="line number2 index1 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">new</code> <code class="java plain">ThreadPoolExecutor(nThreads, nThreads,</code></div><div class="line number3 index2 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">0L, TimeUnit.MILLISECONDS,</code></div><div class="line number4 index3 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">new</code> <code class="java plain">LinkedBlockingQueue&lt;Runnable&gt;());</code></div><div class="line number5 index4 alt2"><code class="java plain">}</code></div><div class="line number6 index5 alt1"><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java plain">ExecutorService newSingleThreadExecutor() {</code></div><div class="line number7 index6 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">new</code> <code class="java plain">FinalizableDelegatedExecutorService</code></div><div class="line number8 index7 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">(</code><code class="java keyword">new</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java value">1</code><code class="java plain">, </code><code class="java value">1</code><code class="java plain">,</code></div><div class="line number9 index8 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">0L, TimeUnit.MILLISECONDS,</code></div><div class="line number10 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">new</code> <code class="java plain">LinkedBlockingQueue&lt;Runnable&gt;()));</code></div><div class="line number11 index10 alt2"><code class="java plain">}</code></div><div class="line number12 index11 alt1"><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java plain">ExecutorService newCachedThreadPool() {</code></div><div class="line number13 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">return</code> <code class="java keyword">new</code> <code class="java plain">ThreadPoolExecutor(</code><code class="java value">0</code><code class="java plain">, Integer.MAX_VALUE,</code></div><div class="line number14 index13 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">60L, TimeUnit.SECONDS,</code></div><div class="line number15 index14 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">new</code> <code class="java plain">SynchronousQueue&lt;Runnable&gt;());</code></div><div class="line number16 index15 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div>
+</div>
+<p>　　从它们的具体实现来看，它们实际上也是调用了ThreadPoolExecutor，只不过参数都已配置好了。</p>
+<p>　　newFixedThreadPool创建的线程池corePoolSize和maximumPoolSize值是相等的，它使用的LinkedBlockingQueue；</p>
+<p>　　newSingleThreadExecutor将corePoolSize和maximumPoolSize都设置为1，也使用的LinkedBlockingQueue；</p>
+<p>　　newCachedThreadPool将corePoolSize设置为0，将maximumPoolSize设置为Integer.MAX_VALUE，使用的SynchronousQueue，也就是说来了任务就创建线程运行，当线程空闲超过60秒，就销毁线程。</p>
+<p>　　实际中，如果Executors提供的三个静态方法能满足要求，就尽量使用它提供的三个方法，因为自己去手动配置ThreadPoolExecutor的参数有点麻烦，要根据实际任务的类型和数量来进行配置。</p>
+<p>　　另外，如果ThreadPoolExecutor达不到要求，可以自己继承ThreadPoolExecutor类进行重写。</p>
+<h2 style="text-align: left;">四.如何合理配置线程池的大小</h2>
+<p style="text-align: left;">　　本节来讨论一个比较重要的话题：如何合理配置线程池大小，仅供参考。</p>
+<p style="text-align: left;">　　一般需要根据任务的类型来配置线程池大小：</p>
+<p style="text-align: left;">　　如果是CPU密集型任务，就需要尽量压榨CPU，参考值可以设为 <em>N</em><sub>CPU</sub>+1</p>
+<p style="text-align: left;">　　如果是IO密集型任务，参考值可以设置为2*<em>N</em><sub>CPU</sub></p>
+<p style="text-align: left;">　　当然，这只是一个参考值，具体的设置还需要根据实际情况进行调整，比如可以先将线程池大小设置为参考值，再观察任务运行情况和系统负载、资源利用率来进行适当调整。</p>
+<p style="text-align: left;">　　参考资料：</p>
+<p style="text-align: left;">　　<a href="http://ifeve.com/java-threadpool/" target="_blank">http://ifeve.com/java-threadpool/</a></p>
+<p style="text-align: left;">　　<a href="http://blog.163.com/among_1985/blog/static/275005232012618849266/" target="_blank">http://blog.163.com/among_1985/blog/static/275005232012618849266/</a></p>
+<p style="text-align: left;">　　<a href="http://developer.51cto.com/art/201203/321885.htm" target="_blank">http://developer.51cto.com/art/201203/321885.htm</a></p>
+<p style="text-align: left;">　　<a href="http://blog.csdn.net/java2000_wl/article/details/22097059" target="_blank">http://blog.csdn.net/java2000_wl/article/details/22097059</a></p>
+<p style="text-align: left;">　　<a href="http://blog.csdn.net/cutesource/article/details/6061229" target="_blank">http://blog.csdn.net/cutesource/article/details/6061229</a></p>
+<p style="text-align: left;">　　<a href="http://blog.csdn.net/xieyuooo/article/details/8718741" target="_blank">http://blog.csdn.net/xieyuooo/article/details/8718741</a></p>
+<p style="text-align: left;">　　《JDK API 1.6》</p></div><div id="MySignature" style="display: block;"><div>作者：<a href="http://www.cnblogs.com/dolphin0520/" target="_blank">海子</a></div>
+　　　　<div>出处：<a href="http://www.cnblogs.com/dolphin0520/" target="_blank">http://www.cnblogs.com/dolphin0520/</a></div>
+　　　　<div>本博客中未标明转载的文章归作者<a href="http://www.cnblogs.com/dolphin0520/" target="_blank">海子</a>和博客园共有，欢迎转载，但未经作者同意必须保留此段声明，且在文章页面明显位置给出原文连接，否则保留追究法律责任的权利。 
+</div>
+</div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="https://www.cnblogs.com/dolphin0520/category/602384.html" target="_blank">Java并发编程</a></div>
+<div id="EntryTag">标签: <a href="https://www.cnblogs.com/dolphin0520/tag/java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">java并发编程</a></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(3932921,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow(&#39;ab3961d0-cd5d-e011-a53f-842b2b196315&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/dolphin0520/" target="_blank"><img src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/u288799.jpg" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/dolphin0520/">海 子</a><br>
+            <a href="http://home.cnblogs.com/u/dolphin0520/followees">关注 - 6</a><br>
+            <a href="http://home.cnblogs.com/u/dolphin0520/followers">粉丝 - 6589</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow(&#39;ab3961d0-cd5d-e011-a53f-842b2b196315&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(3932921,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">171</span>
+    </div>
+    <div class="buryit" onclick="votePost(3932921,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">2</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="https://www.cnblogs.com/dolphin0520/p/3932906.html" class="p_n_p_prefix">« </a> 上一篇：<a href="https://www.cnblogs.com/dolphin0520/p/3932906.html" title="发布于2014-08-29 09:08">Java并发编程：阻塞队列</a><br><a href="https://www.cnblogs.com/dolphin0520/p/3920397.html" class="p_n_p_prefix">» </a> 下一篇：<a href="https://www.cnblogs.com/dolphin0520/p/3920397.html" title="发布于2014-09-03 19:35">Java并发编程：CountDownLatch、CyclicBarrier和Semaphore</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2014-09-03 11:02</span> <a href="https://www.cnblogs.com/dolphin0520/">海 子</a> 阅读(<span id="post_view_count">506397</span>) 评论(<span id="post_comment_count">73</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=3932921" rel="nofollow">编辑</a> <a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" onclick="AddToWz(3932921);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,cb_blogId=86633,cb_entryId=3932921,cb_blogApp=currentBlogApp,cb_blogUserGuid='ab3961d0-cd5d-e011-a53f-842b2b196315',cb_entryCreatedDate='2014/9/3 11:02:00';loadViewCount(cb_entryId);var cb_postType=1;</script>
+	
+</div><!--end: topics 文章、评论容器-->
+</div><a name="!comments"></a><div id="blog-comments-placeholder"><div id="comments_pager_top"><div class="pager"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#!comments" onclick="commentManager.renderComments(1,50);return false;">&lt; Prev</a><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#!comments" onclick="commentManager.renderComments(1,50);return false;">1</a><span class="current">2</span></div></div>
+<br>
+<div class="feedback_area_title">评论列表</div>
+<div class="feedbackNoItems"></div>	
+
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4025524" class="layer">#51楼</a><a name="4025524" id="comment_anchor_4025524"></a>  <span class="comment_date">2018-07-21 17:16</span> <a id="a_comment_author_4025524" href="http://home.cnblogs.com/u/1446076/" target="_blank">陶鹏</a> <a href="http://msg.cnblogs.com/send/%E9%99%B6%E9%B9%8F" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4025524" class="blog_comment_body">很强</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4025524,&#39;Digg&#39;,this)">支持(2)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4025524,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4027444" class="layer">#52楼</a><a name="4027444" id="comment_anchor_4027444"></a>  <span class="comment_date">2018-07-24 11:33</span> <a id="a_comment_author_4027444" href="https://www.cnblogs.com/borshj/" target="_blank">bors9245</a> <a href="http://msg.cnblogs.com/send/bors9245" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4027444" class="blog_comment_body">大佬，厉害</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4027444,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4027444,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4027444_avatar" style="display:none;">http://pic.cnblogs.com/face/1448521/20180723161108.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4029444" class="layer">#53楼</a><a name="4029444" id="comment_anchor_4029444"></a>  <span class="comment_date">2018-07-26 15:27</span> <a id="a_comment_author_4029444" href="https://www.cnblogs.com/drafire/" target="_blank">drafire</a> <a href="http://msg.cnblogs.com/send/drafire" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4029444" class="blog_comment_body">真心厉害，先保存起来，再慢慢研究</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4029444,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4029444,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4034329" class="layer">#54楼</a><a name="4034329" id="comment_anchor_4034329"></a>  <span class="comment_date">2018-08-02 17:56</span> <a id="a_comment_author_4034329" href="http://home.cnblogs.com/u/987227/" target="_blank">Johnny2017</a> <a href="http://msg.cnblogs.com/send/Johnny2017" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4034329" class="blog_comment_body">点赞</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4034329,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4034329,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4041592" class="layer">#55楼</a><a name="4041592" id="comment_anchor_4041592"></a>  <span class="comment_date">2018-08-13 10:38</span> <a id="a_comment_author_4041592" href="http://home.cnblogs.com/u/853847/" target="_blank">SMNH2459956664</a> <a href="http://msg.cnblogs.com/send/SMNH2459956664" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4041592" class="blog_comment_body">写的好棒，感谢</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4041592,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4041592,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4044372" class="layer">#56楼</a><a name="4044372" id="comment_anchor_4044372"></a>  <span class="comment_date">2018-08-16 16:29</span> <a id="a_comment_author_4044372" href="http://home.cnblogs.com/u/1452385/" target="_blank">哈哈~~～～</a> <a href="http://msg.cnblogs.com/send/%E5%93%88%E5%93%88~~%EF%BD%9E%EF%BD%9E" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4044372" class="blog_comment_body">尴尬了 java1.8里没有runstate变量， 而是用AtomicInteger实现的</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4044372,&#39;Digg&#39;,this)">支持(3)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4044372,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4048574" class="layer">#57楼</a><a name="4048574" id="comment_anchor_4048574"></a>  <span class="comment_date">2018-08-22 21:48</span> <a id="a_comment_author_4048574" href="http://home.cnblogs.com/u/1169963/" target="_blank">bky_joker</a> <a href="http://msg.cnblogs.com/send/bky_joker" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4048574" class="blog_comment_body">感谢分享，点赞了</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4048574,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4048574,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4056247" class="layer">#58楼</a><a name="4056247" id="comment_anchor_4056247"></a>  <span class="comment_date">2018-09-02 20:13</span> <a id="a_comment_author_4056247" href="https://www.cnblogs.com/mistermoney/" target="_blank">mistermoney</a> <a href="http://msg.cnblogs.com/send/mistermoney" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4056247" class="blog_comment_body">先收藏再说</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4056247,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4056247,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4066492" class="layer">#59楼</a><a name="4066492" id="comment_anchor_4066492"></a>  <span class="comment_date">2018-09-14 09:24</span> <a id="a_comment_author_4066492" href="https://www.cnblogs.com/CaptainLin/" target="_blank">Captain林</a> <a href="http://msg.cnblogs.com/send/Captain%E6%9E%97" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4066492" class="blog_comment_body">如果是CPU密集型任务，就需要尽量压榨CPU，参考值可以设为 NCPU+1<br><br>　　如果是IO密集型任务，参考值可以设置为2*NCPU<br> 请问下N代表的是什么？谢谢</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4066492,&#39;Digg&#39;,this)">支持(1)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4066492,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4066492_avatar" style="display:none;">http://pic.cnblogs.com/face/605392/20140311190822.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4082289" class="layer">#60楼</a><a name="4082289" id="comment_anchor_4082289"></a>  <span class="comment_date">2018-10-05 14:15</span> <a id="a_comment_author_4082289" href="https://www.cnblogs.com/hpuwsc/" target="_blank">Alexwsc</a> <a href="http://msg.cnblogs.com/send/Alexwsc" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4082289" class="blog_comment_body">线程池的状态这一小节中，博主说ThreadPoolExecutor中定义了一个volatile变量，可是我找遍了所有的源码（各个版本的）都没有找到这一个volatile变量。</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4082289,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4082289,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4082289_avatar" style="display:none;">http://pic.cnblogs.com/face/688241/20141106205151.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4088120" class="layer">#61楼</a><a name="4088120" id="comment_anchor_4088120"></a>  <span class="comment_date">2018-10-13 08:18</span> <a id="a_comment_author_4088120" href="http://home.cnblogs.com/u/1413872/" target="_blank">不忘初心打代码</a> <a href="http://msg.cnblogs.com/send/%E4%B8%8D%E5%BF%98%E5%88%9D%E5%BF%83%E6%89%93%E4%BB%A3%E7%A0%81" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4088120" class="blog_comment_body">import java.util.concurrent.*;<br>import java.util.*;<br>//线程池的使用<br>public  class TestPool1<br>{<br>	public static void main(String[] args)<br>	{<br>		//其中的corePoolSize=10,maximumPoolSize=13.;<br>		//当线程的数目到达10个的时候,下一个线程就会进入到缓存队列中<br>		//此缓存队列中默认有5个线程,当缓存队列中的线程超过默认值的时候就会重新创建线程,<br>		//并且线程数目最多为13+默认缓存队列的值''<br>		ThreadPoolExecutor executor=new ThreadPoolExecutor(10,13,<br>			200,TimeUnit.MILLISECONDS,new ArrayBlockingQueue&lt;Runnable&gt;(5));<br>		for(int i=0;i&lt;18;i++)<br>		{<br>			MyTask  myTask=new MyTask(i);<br>			executor.execute(myTask);//提交线程<br>			System.out.println("线程池中的线程数目:"+executor.getPoolSize()+<br>			"队列中等待执行的任务数目:"+executor.getQueue().size()+<br>				"已经执行完的任务数目:"+executor.getCompletedTaskCount());<br>		}<br>		executor.shutdown();//启动有序关闭,<br>	}<br>}<br>class MyTask implements Runnable <br>{<br>	private int taskName;<br>	public MyTask(int num)<br>	{<br>		this.taskName=num;<br>	}<br>	public void run()<br>	{<br>		System.out.println("正在执行:"+taskName);<br>		try<br>		{<br>			Thread.currentThread().sleep(4000);<br>		}<br>		catch(InterruptedException e)<br>		{<br>			e.printStackTrace();<br>		}<br>		System.out.println("task"+taskName+"执行完毕");<br>	}<br><br>}<br><br>运行结果<br>线程池中的线程数目:1队列中等待执行的任务数目:0已经执行完的任务数目:0<br>线程池中的线程数目:2队列中等待执行的任务数目:0已经执行完的任务数目:0<br>正在执行:0<br>正在执行:1<br>线程池中的线程数目:3队列中等待执行的任务数目:0已经执行完的任务数目:0<br>正在执行:2<br>正在执行:3<br>线程池中的线程数目:4队列中等待执行的任务数目:0已经执行完的任务数目:0<br>线程池中的线程数目:5队列中等待执行的任务数目:0已经执行完的任务数目:0<br>正在执行:4<br>线程池中的线程数目:5队列中等待执行的任务数目:1已经执行完的任务数目:0<br>线程池中的线程数目:5队列中等待执行的任务数目:2已经执行完的任务数目:0<br>线程池中的线程数目:5队列中等待执行的任务数目:3已经执行完的任务数目:0<br>线程池中的线程数目:5队列中等待执行的任务数目:4已经执行完的任务数目:0<br>线程池中的线程数目:5队列中等待执行的任务数目:5已经执行完的任务数目:0<br>线程池中的线程数目:6队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:10<br>线程池中的线程数目:7队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:11<br>正在执行:12<br>线程池中的线程数目:8队列中等待执行的任务数目:5已经执行完的任务数目:0<br>线程池中的线程数目:9队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:13<br>线程池中的线程数目:10队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:14<br>线程池中的线程数目:11队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:15<br>正在执行:16<br>线程池中的线程数目:12队列中等待执行的任务数目:5已经执行完的任务数目:0<br>线程池中的线程数目:13队列中等待执行的任务数目:5已经执行完的任务数目:0<br>正在执行:17<br>task0执行完毕<br>正在执行:5<br>task2执行完毕<br>正在执行:6<br>task3执行完毕<br>正在执行:7<br>task1执行完毕<br>正在执行:8<br>task15执行完毕<br>正在执行:9<br>task14执行完毕<br>task13执行完毕<br>task12执行完毕<br>task11执行完毕<br>task10执行完毕<br>task4执行完毕<br>task17执行完毕<br>task16执行完毕<br>task5执行完毕<br>task6执行完毕<br>task7执行完毕<br>task8执行完毕<br>task9执行完毕</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4088120,&#39;Digg&#39;,this)">支持(2)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4088120,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4093279" class="layer">#62楼</a><a name="4093279" id="comment_anchor_4093279"></a>  <span class="comment_date">2018-10-18 17:01</span> <a id="a_comment_author_4093279" href="https://www.cnblogs.com/duanjt/" target="_blank">段江涛IT</a> <a href="http://msg.cnblogs.com/send/%E6%AE%B5%E6%B1%9F%E6%B6%9BIT" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4093279" class="blog_comment_body">看博客园的文章一般不喜欢评论，但是看了作者的讲解，源码分析。真的，写得太好了。膜拜了。</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4093279,&#39;Digg&#39;,this)">支持(2)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4093279,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4093279_avatar" style="display:none;">http://pic.cnblogs.com/face/761080/20160908202438.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4097060" class="layer">#63楼</a><a name="4097060" id="comment_anchor_4097060"></a>  <span class="comment_date">2018-10-23 19:53</span> <a id="a_comment_author_4097060" href="https://www.cnblogs.com/linkdawn/" target="_blank">dawn~</a> <a href="http://msg.cnblogs.com/send/dawn~" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4097060" class="blog_comment_body">不得不顶一下~~写的太好了</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4097060,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4097060,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4114239" class="layer">#64楼</a><a name="4114239" id="comment_anchor_4114239"></a>  <span class="comment_date">2018-11-14 14:52</span> <a id="a_comment_author_4114239" href="https://www.cnblogs.com/xuzzb/" target="_blank">莫衷一忘</a> <a href="http://msg.cnblogs.com/send/%E8%8E%AB%E8%A1%B7%E4%B8%80%E5%BF%98" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4114239" class="blog_comment_body"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4082289" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,4082289);">@</a>
+Alexwsc<br>N是CPU的核数</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4114239,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4114239,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4121293" class="layer">#65楼</a><a name="4121293" id="comment_anchor_4121293"></a>  <span class="comment_date">2018-11-23 15:59</span> <a id="a_comment_author_4121293" href="https://www.cnblogs.com/btjm314/" target="_blank">groovydiscovery</a> <a href="http://msg.cnblogs.com/send/groovydiscovery" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4121293" class="blog_comment_body"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4066492" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,4066492);">@</a>
+Captain林<br>应该是机器的cpu数量</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4121293,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4121293,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4121293_avatar" style="display:none;">http://pic.cnblogs.com/face/1262158/20180306083349.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4124804" class="layer">#66楼</a><a name="4124804" id="comment_anchor_4124804"></a>  <span class="comment_date">2018-11-28 12:54</span> <a id="a_comment_author_4124804" href="https://www.cnblogs.com/abab301/" target="_blank">T&amp;Y</a> <a href="http://msg.cnblogs.com/send/T%26amp%3BY" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4124804" class="blog_comment_body">说实话，这种博客才叫博客，那种随便从一本书向截一段的真的不怎么样</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4124804,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4124804,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4135139" class="layer">#67楼</a><a name="4135139" id="comment_anchor_4135139"></a>  <span class="comment_date">2018-12-09 15:15</span> <a id="a_comment_author_4135139" href="http://home.cnblogs.com/u/1538563/" target="_blank">镜破军</a> <a href="http://msg.cnblogs.com/send/%E9%95%9C%E7%A0%B4%E5%86%9B" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4135139" class="blog_comment_body">太牛逼了，写的很详细</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4135139,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4135139,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4143286" class="layer">#68楼</a><a name="4143286" id="comment_anchor_4143286"></a>  <span class="comment_date">2018-12-19 21:22</span> <a id="a_comment_author_4143286" href="https://www.cnblogs.com/crazy-xf/" target="_blank">花椒、斯国一</a> <a href="http://msg.cnblogs.com/send/%E8%8A%B1%E6%A4%92%E3%80%81%E6%96%AF%E5%9B%BD%E4%B8%80" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4143286" class="blog_comment_body">优秀。。真的写得好</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4143286,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4143286,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4143286_avatar" style="display:none;">http://pic.cnblogs.com/face/1426526/20180622111207.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4144179" class="layer">#69楼</a><a name="4144179" id="comment_anchor_4144179"></a>  <span class="comment_date">2018-12-20 21:48</span> <a id="a_comment_author_4144179" href="https://www.cnblogs.com/tianpeirong/" target="_blank">田培融</a> <a href="http://msg.cnblogs.com/send/%E7%94%B0%E5%9F%B9%E8%9E%8D" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4144179" class="blog_comment_body">点个赞！！ <br>想master  worker模式处理一个业务，看到这个博客还是有点不理解，在执行代码的时候，会不会一个新的请求过来之后就会新建一个线程池，那这样会不会很慢呢？</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4144179,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4144179,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4147405" class="layer">#70楼</a><a name="4147405" id="comment_anchor_4147405"></a>  <span class="comment_date">2018-12-25 08:48</span> <a id="a_comment_author_4147405" href="https://www.cnblogs.com/jxust-jiege666/" target="_blank">夏晴天</a> <a href="http://msg.cnblogs.com/send/%E5%A4%8F%E6%99%B4%E5%A4%A9" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4147405" class="blog_comment_body">赞，写的太棒了</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4147405,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4147405,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_4147405_avatar" style="display:none;">http://pic.cnblogs.com/face/1068222/20161222174452.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4148894" class="layer">#71楼</a><a name="4148894" id="comment_anchor_4148894"></a>  <span class="comment_date">2018-12-26 11:39</span> <a id="a_comment_author_4148894" href="http://home.cnblogs.com/u/1571099/" target="_blank">木崖</a> <a href="http://msg.cnblogs.com/send/%E6%9C%A8%E5%B4%96" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4148894" class="blog_comment_body">通俗易懂，很好理解。<br>不过楼主看的是JDK几呢... 貌似是JDK7呀 8有较多的改动</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4148894,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4148894,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4149260" class="layer">#72楼</a><a name="4149260" id="comment_anchor_4149260"></a>  <span class="comment_date">2018-12-26 17:31</span> <a id="a_comment_author_4149260" href="http://home.cnblogs.com/u/1344839/" target="_blank">pl很快再相见</a> <a href="http://msg.cnblogs.com/send/pl%E5%BE%88%E5%BF%AB%E5%86%8D%E7%9B%B8%E8%A7%81" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4149260" class="blog_comment_body">我擦，撸不动。。先保存</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4149260,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4149260,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4154759" class="layer">#73楼</a><a name="4154759" id="comment_anchor_4154759"></a><span id="comment-maxId" style="display:none;">4154759</span><span id="comment-maxDate" style="display:none;">2019/1/3 16:00:51</span>  <span class="comment_date">2019-01-03 16:00</span> <a id="a_comment_author_4154759" href="https://www.cnblogs.com/hnust-hua/" target="_blank">hnust_hua</a> <a href="http://msg.cnblogs.com/send/hnust_hua" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_4154759" class="blog_comment_body"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4066492" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,4066492);">@</a>
+Captain林<br>CPU的核心数吧，这样应该是为了平均分配给CPU，并发执行</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(4154759,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(4154759,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	<div id="comments_pager_bottom"><div class="pager"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#!comments" onclick="commentManager.renderComments(1,50);return false;">&lt; Prev</a><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#!comments" onclick="commentManager.renderComments(1,50);return false;">1</a><span class="current">2</span></div></div></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#" onclick="return RefreshPage();">刷新页面</a><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#top">返回顶部</a></div>
+<div id="comment_form_container"><div class="login_tips">注册用户登录后才能发表评论，请 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login(&#39;commentform&#39;);">登录</a> 或 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，<a href="http://www.cnblogs.com/">访问</a>网站首页。</div></div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-工控&#39;)">【推荐】超50万VC++源码: 大型组态工控、电力仿真CAD与GIS源码库！</a><br></div>
+<div id="opt_under_post"></div>
+<script async="async" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/gpt.js.download"></script>
+<script>
+  var googletag = googletag || {};
+  googletag.cmd = googletag.cmd || [];
+</script>
+<script>
+  googletag.cmd.push(function() {
+        googletag.defineSlot('/1090369/C1', [300, 250], 'div-gpt-ad-1546353474406-0').addService(googletag.pubads());
+        googletag.defineSlot('/1090369/C2', [468, 60], 'div-gpt-ad-1539008685004-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+  });
+</script>
+<div id="cnblogs_c1" class="c_ad_block">
+<div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;" data-google-query-id="CMzcsYzU098CFYqxlgodlTULTw">
+<script>
+if(canShowAdsense()) {
+    googletag.cmd.push(function() { googletag.display('div-gpt-ad-1546353474406-0'); });
+}
+</script>
+<div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C1_0" width="300" height="250" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" style="border: 0px; vertical-align: bottom;" data-google-container-id="1" data-load-complete="true" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/saved_resource.html"></iframe></div></div>
+</div>
+<div id="under_post_news"><div class="itnews c_ad_block"><b>相关博文：</b><br>·  <a href="https://www.cnblogs.com/winner-0715/p/6833502.html" target="_blank" onclick="clickRecomItmem(6833502,&#39;nBBo1DsHH/qbNhtsMZLpprbIA5AHr3Kxk64kqUln4E2j0xzvxk2ScMp5IHOhfWCjzGA70YZkOA1AlckNba2znvdWy3Hu9lmYaAnLW4BUy3ztpPsE0iBHBOwdTSALTTDVSeXLcT6DGvdDKgEY7wp3OagR1Nq2gloSS1ca5rDy8ALfzr9wZEiJLEXMGavcX3poMw==&#39;)">@Java并发编程：线程池的使用</a><br>·  <a href="https://www.cnblogs.com/hellocyc/p/6305512.html" target="_blank" onclick="clickRecomItmem(6305512,&#39;+V0Rl7L5WeiNmywwA+7TTJdvSerlasVE3Hqj21hPsXFfbOC06ow12JFZ4UUiGy35U579pjOzsmwYP5Eg6dHCmjojfkR4um38KikWtTMAuXsAuHmOVblnfDCbiez27g4x4jH+Zor+AnEBS2v4gxtUoBiWC9/LLykt2pZiNgrhmjqEMVibablCFMsdhQyT8rx9Xqua&#39;)">并发编程：线程池使用</a><br>·  <a href="https://www.cnblogs.com/xifenglou/p/6567779.html" target="_blank" onclick="clickRecomItmem(6567779,&#39;UsuzCB3RyYAVU7I86vi5npZZrfNjJQ4Xxp0HJz/65G+ZDc1tlylsVXvHY+7GTTrzVB59wuHoBc7JlPpInZ8E4SOhgbc43F8RtOm+EHAwdQilmsr67pSu/bwGzWpphA7eamu7gkI25Uz6D+FOzVdZ+nJnlD1fXHPTzMNAbRxWOoTzLGVHHuWQUOJeZLqG+2s=&#39;)">深入理解线程池</a><br>·  <a href="https://www.cnblogs.com/signheart/p/5119e96c780f37499222346a78039ab3.html" target="_blank" onclick="clickRecomItmem(6606553,&#39;RYi8DGmK7GB3w/RSh/EUhuwWX8GTRweSIPAgzfjWatWuHRESUVL7p0cQ0StWgKMUvBsdabW6FkdRhliRq2W+AXyexJCtzvSGlo0Q/1XqG1meG0f7pVTy2Oky8QZYlZDhMgFvuNm6ZcdBvctpKjXr5wHORTWnIqhmpubz5dVhzqBrD5H7wYxPGqm3Tg==&#39;)">java 多线程 26 ： 线程池</a><br>·  <a href="https://www.cnblogs.com/wangzhongqiu/p/6478334.html" target="_blank" onclick="clickRecomItmem(6478334,&#39;LBDEcDHaqwc6I5LeAKdeowkaRLFMe5NDXlfviPGhTImCuxR2JTfVw7fc7k7uzgvZsXcOlInJNWSoJQYlJ620TLswz8Qpl+Xf/Giu7LJk0pQ2casf3zswrTFZbDi380S2kNKswyaq/+I//+Rzn88/s8Sel0us0h3zKEDY+U5djM5lWw==&#39;)">【Java并发编程】7、线程池</a><br></div></div>
+<div id="cnblogs_c2" class="c_ad_block">
+    <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;" data-google-query-id="CKjfr4zU098CFRQrvQodRFgEuQ">
+    <script>
+    if(canShowAdsense()) {
+        googletag.cmd.push(function() { googletag.display('div-gpt-ad-1539008685004-0'); });
+    }
+    </script>
+    <div id="google_ads_iframe_/1090369/C2_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C2_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C2_0" width="468" height="60" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" style="border: 0px; vertical-align: bottom;" data-google-container-id="2" data-load-complete="true" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/saved_resource(1).html"></iframe></div></div>
+</div>
+<div id="under_post_kb"><div class="itnews c_ad_block"><b>最新新闻</b>：<br> ·  <a href="https://news.cnblogs.com/n/616444/" target="_blank">告诉你一个真实的中国互联网世界：精英与草根</a><br> ·  <a href="https://news.cnblogs.com/n/616488/" target="_blank">下沉市场背后的真实中国</a><br> ·  <a href="https://news.cnblogs.com/n/616492/" target="_blank">瑞幸乌托邦 资本咖啡的泡沫？</a><br> ·  <a href="https://news.cnblogs.com/n/616491/" target="_blank">2019年手机厂商的难题：5G要来，跟还是不跟？</a><br> ·  <a href="https://news.cnblogs.com/n/616490/" target="_blank">滴滴出行的2018：战争、扩张与危机</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverAdT2();
+    deliverAdC1();
+    deliverAdC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);   
+</script>
+</div>
+
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<!--done-->
+<div class="newsItem">
+<h3 class="catListTitle">公告</h3>
+	<div id="blog-news"><p>联系方式：</p>
+<p>邮箱：dolphin0520@163.com</p>
+<p>微信：scu_dolphin0520</p><div id="profile_block">昵称：<a href="https://home.cnblogs.com/u/dolphin0520/">海 子</a><br>园龄：<a href="https://home.cnblogs.com/u/dolphin0520/" title="入园时间：2011-04-03">7年9个月</a><br>粉丝：<a href="https://home.cnblogs.com/u/dolphin0520/followers/">6589</a><br>关注：<a href="https://home.cnblogs.com/u/dolphin0520/followees/">6</a><div id="p_b_follow"><a href="javascript:void(0);" onclick="follow(&#39;ab3961d0-cd5d-e011-a53f-842b2b196315&#39;)">+加关注</a></div><script>getFollowStatus('ab3961d0-cd5d-e011-a53f-842b2b196315')</script></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" cellspacing="0" cellpadding="0" title="Calendar">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2018/12/01&#39;);return false;">&lt;</a></td><td align="center">2019年1月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2019/02/01&#39;);return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" align="center" abbr="日" scope="col">日</th><th class="CalDayHeader" align="center" abbr="一" scope="col">一</th><th class="CalDayHeader" align="center" abbr="二" scope="col">二</th><th class="CalDayHeader" align="center" abbr="三" scope="col">三</th><th class="CalDayHeader" align="center" abbr="四" scope="col">四</th><th class="CalDayHeader" align="center" abbr="五" scope="col">五</th><th class="CalDayHeader" align="center" abbr="六" scope="col">六</th></tr><tr><td class="CalOtherMonthDay" align="center">30</td><td class="CalOtherMonthDay" align="center">31</td><td align="center">1</td><td align="center">2</td><td align="center">3</td><td class="CalTodayDay" align="center">4</td><td class="CalWeekendDay" align="center">5</td></tr><tr><td class="CalWeekendDay" align="center">6</td><td align="center">7</td><td align="center">8</td><td align="center">9</td><td align="center">10</td><td align="center">11</td><td class="CalWeekendDay" align="center">12</td></tr><tr><td class="CalWeekendDay" align="center">13</td><td align="center">14</td><td align="center">15</td><td align="center">16</td><td align="center">17</td><td align="center">18</td><td class="CalWeekendDay" align="center">19</td></tr><tr><td class="CalWeekendDay" align="center">20</td><td align="center">21</td><td align="center">22</td><td align="center">23</td><td align="center">24</td><td align="center">25</td><td class="CalWeekendDay" align="center">26</td></tr><tr><td class="CalWeekendDay" align="center">27</td><td align="center">28</td><td align="center">29</td><td align="center">30</td><td align="center">31</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td></tr><tr><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td><td class="CalOtherMonthDay" align="center">7</td><td class="CalOtherMonthDay" align="center">8</td><td class="CalOtherMonthDay" align="center">9</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+<div id="widget_my_google" class="div_my_zzk"><input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk"></div>
+</div>
+</div>
+
+</div><div id="sidebar_recentposts" class="sidebar-block">
+<div class="catListEssay">
+<h3 class="catListTitle">最新随笔</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/dolphin0520/p/9501842.html">1. 【置顶】博客恢复更新公告</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/4040551.html">2. 金山快盘+TortoiseSVN构建版本控制仓库</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/4012804.html">3. 在windows下安装配置Ulipad</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3920385.html">4. Java并发编程：线程间协作的两种方式：wait、notify、notifyAll和Condition</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3932934.html">5. JAVA多线程和并发基础面试问答（转载）</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3958019.html">6. Java线程面试题 Top 50 （转载）</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3938991.html">7. Java并发编程：Timer和TimerTask（转载）</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3949310.html">8. Java并发编程：Callable、Future和FutureTask</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3920397.html">9. Java并发编程：CountDownLatch、CyclicBarrier和Semaphore</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html">10. Java并发编程：线程池的使用</a></li>
+</ul>
+</div>
+</div><div id="sidebar_categories">
+<div id="sidebar_postcategory" class="catListPostCategory sidebar-block">
+<h3 class="catListTitle">随笔分类<span style="font-size:11px;font-weight:normal">(194)</span></h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_0_Link_0" href="https://www.cnblogs.com/dolphin0520/category/291783.html">Android(14)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_1" href="https://www.cnblogs.com/dolphin0520/category/291771.html">C/C++(30)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_2" href="https://www.cnblogs.com/dolphin0520/category/602385.html">Java NIO(2)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_3" href="https://www.cnblogs.com/dolphin0520/category/602384.html">Java并发编程(19)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_4" href="https://www.cnblogs.com/dolphin0520/category/787419.html">Java代码之美</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_5" href="https://www.cnblogs.com/dolphin0520/category/361055.html">Java基础(18)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_6" href="https://www.cnblogs.com/dolphin0520/category/602390.html">Java集合</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_7" href="https://www.cnblogs.com/dolphin0520/category/787418.html">Java网络编程</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_8" href="https://www.cnblogs.com/dolphin0520/category/602387.html">Java虚拟机</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_9" href="https://www.cnblogs.com/dolphin0520/category/480376.html">JS/CSS/Jquery</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_10" href="https://www.cnblogs.com/dolphin0520/category/361959.html">Linux/Shell(4)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_11" href="https://www.cnblogs.com/dolphin0520/category/731028.html">Mysql</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_12" href="https://www.cnblogs.com/dolphin0520/category/327629.html">OJ(14)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_13" href="https://www.cnblogs.com/dolphin0520/category/741432.html">PHP</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_14" href="https://www.cnblogs.com/dolphin0520/category/400707.html">Python/Web框架(16)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_15" href="https://www.cnblogs.com/dolphin0520/category/787470.html">Redis</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_16" href="https://www.cnblogs.com/dolphin0520/category/575043.html">Web开发(2)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_17" href="https://www.cnblogs.com/dolphin0520/category/294641.html">XML(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_18" href="https://www.cnblogs.com/dolphin0520/category/470797.html">计算机网络</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_19" href="https://www.cnblogs.com/dolphin0520/category/417710.html">计算机系统(3)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_20" href="https://www.cnblogs.com/dolphin0520/category/477333.html">开发工具(7)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_21" href="https://www.cnblogs.com/dolphin0520/category/605219.html">设计模式(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_22" href="https://www.cnblogs.com/dolphin0520/category/309705.html">数据结构(11)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_23" href="https://www.cnblogs.com/dolphin0520/category/407852.html">数据库(2)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_24" href="https://www.cnblogs.com/dolphin0520/category/417089.html">数据挖掘(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_25" href="https://www.cnblogs.com/dolphin0520/category/291774.html">算法(27)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_26" href="https://www.cnblogs.com/dolphin0520/category/471232.html">无线传感器网络(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_27" href="https://www.cnblogs.com/dolphin0520/category/291786.html">信息检索</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_28" href="https://www.cnblogs.com/dolphin0520/category/442033.html">业余娱乐(7)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_29" href="https://www.cnblogs.com/dolphin0520/category/470009.html">转载(14)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_30" href="https://www.cnblogs.com/dolphin0520/category/417087.html">自然语言处理</a> </li>
+
+</ul>
+
+</div>
+
+<div id="sidebar_links291873" class="catList sidebar-block">
+<h3 class="catListTitle">常用链接</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_1_Link_0" href="http://www.cplusplus.com/reference/" rel="nofollow" target="_blank">C++ Reference</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_1" href="http://msdn.microsoft.com/zh-cn/default.aspx" rel="nofollow" target="_blank">MSDN 主页</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_2" href="http://cstest.scu.edu.cn/soj/index.action" rel="nofollow" target="_blank">SOJ</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_3" href="http://poj.org/" rel="nofollow" target="_blank">北大OJ</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_4" href="http://ifeve.com/" rel="nofollow" target="_blank">并发编程网</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_5" href="http://acm.hdu.edu.cn/" rel="nofollow" target="_blank">杭电OJ</a> </li>
+
+</ul>
+
+</div>
+
+</div><div id="sidebar_scorerank" class="sidebar-block">
+<div class="catListBlogRank">
+<h3 class="catListTitle">积分与排名</h3>
+<ul>
+	<li class="liScore">
+		积分 -	445350
+	</li>
+	<li class="liRank">
+		排名 -	396
+	</li>
+</ul>
+</div>
+
+
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<div class="catListComment">
+<h3 class="catListTitle">最新评论</h3>
+
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/dolphin0520/p/9501842.html#4155209">1. Re:【置顶】博客恢复更新公告</a></li>
+        <li class="recent_comment_body">加油</li>
+        <li class="recent_comment_author">--Sinceの</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html#4154759">2. Re:Java并发编程：线程池的使用</a></li>
+        <li class="recent_comment_body">@Captain林CPU的核心数吧，这样应该是为了平均分配给CPU，并发执行...</li>
+        <li class="recent_comment_author">--hnust_hua</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/dolphin0520/p/3769804.html#4153886">3. Re:Java异常处理和设计</a></li>
+        <li class="recent_comment_body">大牛学习了， 受益匪浅，学习笔记  <a href="https://www.cnblogs.com/dolphin0520/p/3932921.html" target="_blank"></a> ，欢迎指点</li>
+        <li class="recent_comment_author">--限量版爱</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock"><ul><li><a href="https://www.cnblogs.com/dolphin0520/p/3932921.html">1. Java并发编程：线程池的使用(506342)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3811437.html">2. 深入理解Java的接口和抽象类(331510)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3736238.html">3. 浅析Java中的final关键字(320616)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3799052.html">4. Java中的static关键字解析(308258)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3920373.html">5. Java并发编程：volatile关键字解析(299074)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3933551.html">6. Java ConcurrentModificationException异常原因和解决方法(266023)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3920407.html">7. Java并发编程：深入剖析ThreadLocal(244801)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3811445.html">8. Java内部类详解(215008)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/p/3949310.html">9. Java并发编程：Callable、Future和FutureTask(198993)</a></li><li><a href="https://www.cnblogs.com/dolphin0520/archive/2011/08/26/2155202.html">10. Dijkstra算法（单源最短路径）(193818)</a></li></ul></div>
+</div>
+</div></div></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright ©2019 海 子
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+<iframe id="google_osd_static_frame_5589188858105" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;" src="./Java并发编程：线程池的使用 - 海 子 - 博客园_files/saved_resource(2).html"></iframe></body></html>
