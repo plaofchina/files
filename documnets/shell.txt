@@ -1,0 +1,148 @@
+
+grep -e 'p[0-9]*_g.*:x:' /etc/group| awk '{split($1,a,":");print a[1];print a[4]}' 
+查看所有pg pu用户
+grep -e 'p[0-9]*_g.*:x:' /etc/group| awk '{split($1,a,":");print a[1] ":" a[4]}' 
+
+
+grep "p[0-9]*_g.*:x:" /etc/group| sort | awk '{split($1,a,":");print a[1]" "a[4]}' | awk '{split($2,arr,",");slen=asort(arr,sarr);for(i=1;i<=slen;i++){print $1" "sarr[i]}}' ;
+查看用户组和用户的从属关系
+ 
+ 
+ Runtime.exec执行复杂的linux命令不成功问题解决，同时需要分别对产生的错误流和输出流进行处理，不然缓冲区会爆炸的
+ 将cmd命令传入字符串数组，字符串数组的由"sh","-c"和cmd命令三个元素组成
+ String cmd = "sudo -n grep ^" + user + ": /etc/passwd || sudo -n useradd " + user
+						+ " && sudo -n ls -d /home/" + user + " || sudo -n mkdir /home/" + user
+						+ " && sudo -n chmod 777 /home/" + user;";
+String[] cmd2 = {"sh","-c",cmd};
+
+Runtime rt = Runtime.getRuntime();
+Process proc = rt.exec(cmd2);
+proc.waitFor();
+对产生的流进行处理，防止缓冲区写满造成阻塞 
+delimiter $;
+create trigger db_insert after insert  
+on dbs for each row
+ begin
+ insert into tbls (tbl_id,db_id,sd_id,tbl_name) values(123,new.db_id,344,new.name);
+ end $
+
+ CD_ID | COMMENT            | COLUMN_NAME | TYPE_NAME | INTEGER_IDX |
++-------+--------------------+-------------+-----------+-------------+
+|   271 | Cookie create time | create_time | string    |           1 |
+|   318 | NULL               | create_time | string    |           1 |
+|   399 | Cookie create time | create_time | string    |           1 |
+|   437 | NULL               | create_time | string    |           1 |
+|   438 | NULL               | orderd_id   | int       |           0 |
+|   439 | NULL               | create_time | string    |           1 |
+|   441 | NULL               | create_time | string    |           1 |
++-------+--------------------+-------------+-----------+-------------+
+ 
+mysql> grant all privileges on *.* to 'root'@'%' identified by '' with grant option;
+
+ 
+grant all privileges on 库名.表名 to '用户名'@'IP地址' identified by '密码' with grant option;
+flush privileges;
+1
+2
+库名:要远程访问的数据库名称,所有的数据库使用“*” 
+表名:要远程访问的数据库下的表的名称，所有的表使用“*” 
+用户名:要赋给远程访问权限的用户名称 
+IP地址:可以远程访问的电脑的IP地址，所有的地址使用“%” 
+密码:要赋给远程访问权限的用户对应使用的密码
+
+ 
+ 
+①ArrayHandler:把结果集中的第一行数据转成对象数组。
+②ArrayListHandler：把结果集中的每一行数据都转成一个对象数组，再存放到List中。
+③BeanHandler：将结果集中的第一行数据封装到一个对应的JavaBean实例中。
+④BeanListHandler：将结果集中的每一行数据都封装到一个对应的JavaBean实例中，存放到List里。
+⑤MapHandler：将结果集中的第一行数据封装到一个Map里，key是列名，value就是对应的值。
+⑥MapListHandler：将结果集中的每一行数据都封装到一个Map里，然后再存放到List
+⑦ColumnListHandler：将结果集中某一列的数据存放到List中。
+⑧KeyedHandler(name)：将结果集中的每一行数据都封装到一个Map里(List<Map>)，再把这些map再存到一个map里，其key为指定的列。
+⑨ScalarHandler：获取结果集中第一行数据指定列的值，常用来进行单值查询。
+
+
+Description	Resource	Path	Location	Type
+Project build error: Invalid packaging for parent POM abc:abc:0.0.1-SNAPSHOT, must be "pom" but is "jar"	pom.xml	/b	line 1	Maven pom Loading Problem
+
+CountDownLatchlatch = new CountDownLatch(3);
+Waiter waiter =new Waiter(latch);
+Decrementerdecrementer = new Decrementer(latch);
+newThread(waiter) .start();
+newThread(decrementer).start();
+Thread.sleep(4000);
+public classWaiter implements Runnable{
+CountDownLatchlatch = null;
+publicWaiter(CountDownLatch latch) {
+this.latch =latch;
+}
+public voidrun() {
+try {
+latch.await();
+} catch(InterruptedException e) {
+e.printStackTrace();
+}
+System.out.println("WaiterReleased");
+}
+}
+public classDecrementer implements Runnable {
+CountDownLatchlatch = null;
+publicDecrementer(CountDownLatch latch) {
+this.latch =latch;
+}
+public voidrun() {
+try {
+Thread.sleep(1000);
+this.latch.countDown();
+Thread.sleep(1000);
+this.latch.countDown();
+Thread.sleep(1000);
+this.latch.countDown();
+} catch(InterruptedException e) {
+e.printStackTrace();
+}
+}
+}
+
+
+db_name ,tbl_name ,col_name ,col_type ,platform ,tbl_id  
+
+
+
+peng.zhang
+爱我所爱，无论你是好是坏
+kafka的一些常用命令
+复制代码
+启动zookeeper
+
+bin/zookeeper-server-start.sh config/zookeeper.properties &
+
+启动kafka
+
+bin/kafka-server-start.sh config/server.properties &
+
+停止kafka
+bin/kafka-server-stop.sh
+
+停止zookeeper
+bin/zookeeper-server-stop.sh
+复制代码
+复制代码
+创建topic
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+展示topic
+bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+描述topic
+bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic my-replicated-topic
+
+生产者：
+bin/kafka-console-producer.sh --broker-list 10.122.33.6:9092 --topic my-replicated-topic
+
+消费者：
+bin/kafka-console-consumer.sh --zookeeper 10.122.33.6:2182 --topic test --from-beginnin
+
+
+
