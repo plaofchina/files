@@ -1,0 +1,122 @@
+1. 首先安装PostgreSQL的rpm
+
+sudo yum install http://yum.postgresql.org/9.5/redhat/rhel-7-x86_64/pgdg-redhat95-9.5-2.noarch.rpm -y
+2. 然后再安装PostgreSQL服务器和第三方扩展包
+
+sudo yum install postgresql95-server postgresql95-contrib -y
+3. 初始化数据库(请看下面更新部分)
+
+sudo /usr/pgsql-9.5/bin/postgresql95-setup initdb
+---------------------------我是分割线，2016.10.26更新开始---------------------------
+
+3. 默认情况下，Postgresql安装目录是/usr/pgsql-9.5,而Postgresql的数据目录是/var/lib/pgsql/版本号/data目录，如果你从一开始就规划了/var很大磁盘空间，就没有问题，但是一旦你的/var目录空间并不大，那么就要考虑在安装Postgresql时指定安装目录了，在本例中，我们假定/home的空间很大。
+
+首先在/home下创建一个Postgresql的数据目录
+
+sudo mkdir /home/postgresql_data
+然后为这个目录指定所有者同时分配权限
+
+sudo chown postgres:postgres /home/postgresql_data
+
+sudo chmod 750 /home/postgresql_data
+然后设置环境变量
+
+export PATH=/usr/pgsql-9.5/bin:$PATH
+
+export LD_LIBRARY_PATH=/usr/pgsql-9.5/lib
+
+export PGDATA=/home/postgresql_data
+然后使用命令initdb生成数据库簇,在此之此，请切换至postgres用户
+
+initdb
+最后尝试启动Postgresql服务
+
+pg_ctl start -D $PGDATA
+使用 ps -ef | grep postgres 验证，如果有一堆postgres相关进程，那就安装成功了。
+
+4. 下面需要先对服务配置文件postgresql.conf进行一些设置：
+
+将 #listen_addresses = 'localhost' 前的#号去掉，然后将后面的localhost改为*，然后将 #port = 5432 前的#去掉,最后再将 #password_encryption = on 前面的#号去掉，如下图所示，使用wq命令保存退出。
+
+5. 再对pg_hba.conf内容进行配置，将上面红框内(IPV4)的ident改为md5,然后再在最下面加入 host all all 0.0.0.0/0 md5 ，如下图所示
+6,重启
+
+
+关于连接PostgreSQL时提示 FATAL: password authentication failed for user "连接用户名" 的解决方法
+
+psql连接，用alter role修改密码
+[postgres @ pgsqldb-master bin]$ psql
+psql (9.2.3)
+Type "help" for help.
+
+postgres=# alter role postgres with password '123';
+ALTER ROLE
+postgres=#
+
+4、退出psql
+5、编辑pg_hba.conf,将turst认证修改成md5认证，编辑后退出保存
+6、执行pg_ctl reload加载生效
+连接到指定的数据库:
+psql -U username -d dbname -h ip -p port 
+ALTER TABLE pg_catalog.pg_attribute REPLICA IDENTITY FULL
+psql -U ludp_metadata -d lucicloud -h luciskystg.gbi-lenovo.com -p 5432
+dUgKgcsVPNMWXW7dCRgXesjSr
+select table_catalog,table_schema,table_name,column_name,data_type from information_schema.columns where table_schema not in ('pg_catalog','information_schema');
+select table_catalog,table_schema,table_name,table_type from information_schema.tables where table_schema not in ('pg_catalog','information_schema');
+
+获取所有表名
+SELECT   tablename   FROM   pg_tables  
+WHERE   tablename   NOT   LIKE   'pg%'  
+AND tablename NOT LIKE 'sql_%'
+ORDER   BY   tablename;
+SELECT   relname   FROM   pg_class   WHERE   relname   NOT   LIKE   'pg%'   AND relname NOT LIKE 'sql_%' ORDER   BY   relname;
+
+表名字 用途 
+pg_aggregate 聚集函数 
+pg_am 索引访问方法 
+pg_amop 访问方法操作符 
+pg_amproc 访问方法支持过程 
+pg_attrdef 字段缺省值 
+pg_attribute 表的列(也称为”属性”或”字段”) 
+pg_authid 认证标识符(角色) 
+pg_auth_members 认证标识符成员关系 
+pg_autovacuum 每个关系一个的自动清理配置参数 
+pg_cast 转换(数据类型转换) 
+pg_class 表、索引、序列、视图(“关系”) 
+pg_constraint 检查约束、唯一约束、主键约束、外键约束 
+pg_conversion 编码转换信息 
+pg_database 本集群内的数据库 
+pg_depend 数据库对象之间的依赖性 
+pg_description 数据库对象的描述或注释 
+pg_index 附加的索引信息 
+pg_inherits 表继承层次 
+pg_language 用于写函数的语言 
+pg_largeobject 大对象 
+pg_listener 异步通知 
+pg_namespace 模式 
+pg_opclass 索引访问方法操作符类 
+pg_operator 操作符 
+pg_pltemplate 过程语言使用的模板数据 
+pg_proc 函数和过程 
+pg_rewrite 查询重写规则 
+pg_shdepend 在共享对象上的依赖性 
+pg_shdescription 共享对象上的注释 
+pg_statistic 优化器统计 
+pg_tablespace 这个数据库集群里面的表空间 
+pg_trigger 触发器 
+pg_type 数据类型
+
+
+函数名	返回类型	描述
+pg_column_size(any)	int	存储一个指定的数值需要的字节数（可能压缩过）
+pg_database_size(oid)	bigint	指定OID的数据库使用的磁盘空间
+pg_database_size(name)	bigint	指定名称的数据库使用的磁盘空间
+pg_indexes_size(regclass)	bigint	关联指定表OID或表名的表索引的使用总磁盘空间
+pg_relation_size(relation regclass, fork text)	bigint	指定OID或名的表或索引，通过指定fork('main', 'fsm' 或'vm')所使用的磁盘空间
+pg_relation_size(relation regclass)	bigint	pg_relation_size(..., 'main')的缩写
+pg_size_pretty(bigint)	text	Converts a size in bytes expressed as a 64-bit integer into a human-readable format with size units
+pg_size_pretty(numeric)	text	把以字节计算的数值转换成一个人类易读的尺寸单位
+pg_table_size(regclass)	bigint	指定表OID或表名的表使用的磁盘空间，除去索引（但是包含TOAST，自由空间映射和可视映射）
+pg_tablespace_size(oid)	bigint	指定OID的表空间使用的磁盘空间
+pg_tablespace_size(name)	bigint	指定名称的表空间使用的磁盘空间
+pg_total_relation_size(regclass)	bigint	指定表OID或表名使用的总磁盘空间，包括所有索引和TOAST数据
